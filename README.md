@@ -51,7 +51,7 @@ PrestaShop Mastercard Payment Gateway Service module supports the following list
 ## Installation
 
 1. Make a backup of your site before applying new mods etc.
-2. Download the .zip file of the latest release of the extension from https://github.com/Mastercard-Gateway/gateway-prestashop-module/releases
+2. Download the .zip file of the latest release of the extension from https://github.com/fingent-corp/gateway-prestashop-mastercard-module/
 3. Go to Admin → Modules → Module Manager → Upload a Module and upload the downloaded .zip file.
 4. After uploading the PrestaShop Module, click the Configure button.
 
