@@ -11,7 +11,7 @@ The latest release of the plugin has the following system requirements:
 
 ## Documentation
 
-The official documentation for this module is available on: https://mpgs.fingent.wiki/target/prestashop-mastercard-payment-gateway-services
+The official documentation for this module is available at: https://mpgs.fingent.wiki/target/prestashop-mastercard-payment-gateway-services
 
 ## Support
 
@@ -25,7 +25,7 @@ Versions v1.3.5
 
 Versions v1.3.7
 - The refund is failing if the Gateway Order ID Prefix field is longer than 41.
-- It's impossible to void authorised transaction on newest versions of PrestaShop.
+- It's impossible to void authorized transactions on the newest versions of PrestaShop.
 - Admin is redirected to the Order Listing instead of the Order View page after actions produced by the module.
 
 Version v1.3.8
@@ -35,7 +35,7 @@ Version v1.4.0
 - Enhanced Compatibility: Compatible with PHP 8.1 & PrestaShop 8.0.x (tested with v8.0.4).
 - The module has been updated to API version 73.
 - Added the Checkout Interaction Model feature to the admin settings.
-- Hosted session payment method is no longer supported.
+- The Hosted session payment method is no longer supported.
 
 ## Feature Support
 
@@ -69,7 +69,7 @@ Find the relevant Configure button under your Module Manager:
 
 Firstly, it’s important to configure your gateway credentials in TEST mode and make sure that everything works.
 
-Note: that if gateway credentials are not configured correctly, you can not enable any of the modules payment methods.
+Note: that if gateway credentials are not configured correctly, you can not enable any of the module's payment methods.
 
 If the gateway credentials are incorrect for any reason, there will be a warning displayed at the top of the configuration page.
 
@@ -83,8 +83,8 @@ The General Settings view:
 |--|--|
 | Live Mode | Yes/No. Toggles between Test and Live mode. Both modes have their own set of credential fields which you need to fill separately. It gives you the ability to switch between modes without re-entering your credentials every time. |
 | API Endpoint | The API endpoint should be selected based on your account region.|
-|Send Line Items |Yes/No. This setting allows you to choose if you want shopping cart data to be sent to the gateway, this includes product information, grand total, etc. |
-|Test Merchant ID / Merchant ID |Your merchant ID. |
+|Send Line Items |Yes/No. This setting allows you to choose if you want shopping cart data to be sent to the gateway, this includes product information, total, etc. |
+|Test Merchant ID / Merchant ID |Your Merchant ID. |
 |Test API Password / API Password | Your merchant API password.|
 |Test Webhook Secret / Webhook Secret | If webhook support is enabled, then enter your webhook secret here.|
 
@@ -99,13 +99,13 @@ Below are list of Hosted Checkout method configurations which you will find in t
 |Name|Description  |
 |--|--|
 |Enabled | Two Options are available: <br> **YES** - to enable this payment method for Mastercard Payment Gateway Module <br> **NO** - to disable this payment method |
-|Title |Text mentioned here will be appear on front-end checkout page / payment method section. |
+|Title |The Text mentioned here will appear on the front-end checkout page/payment method section. |
 |Theme| Leave blank unless indicated by your payment provider. |
-|Payment Model|Select any One option from below: <br>**Purchase**  - Fund will be transferred to merchant account as soon as user’s entered card details has been successfully verified and order is placed. <br>**Authorize**  - 2 stage process; where once order will place, it will only authorize user’s card details. Payment amount need to be captured manually by merchant. |
+|Payment Model|Select any One option from below: <br>**Purchase**  - Fund will be transferred to the merchant account as soon as the user’s entered card details have been successfully verified and the order is placed. <br>**Authorize**  - 2-stage process; where once an order is placed, it will only authorize the user’s card details. The payment amount needs to be captured manually by the merchant. |
 |Checkout Interaction Model |Select any One option from below: <br>**Embedded**  - Show a hosted payment form embedded into the merchant site. <br> **Hosted Payment Page**  - Redirect to a hosted payment page to complete the payment.|
 
 ## Back-office Operations
-If Authorize payment method has been selected, then Funds need to be captured or refunded manually.
+If the Authorize payment method has been selected, then Funds need to be captured or refunded manually.
 
 ### To Capture Funds
 
@@ -140,7 +140,7 @@ Once Payment has been captured by the merchant using the Capture Payment option,
 
 - On clicking on the Full Refund button, the amount will be refunded to the user.
 
-- To Restock the ordered product, you will need to do the process of creating PrestaShop Refund on top of Mastercard Payment Gateway module refund process
+- To Restock the ordered product, you will need to the process of creating a PrestaShop Refund on top of the Mastercard Payment Gateway module refund process
 
 #### Partial Refund
 
@@ -162,8 +162,8 @@ Below is the list of advanced configurations for the Mastercard Payment Gateway 
 
 |Name|Description  |
 |--|--|
-| Logging Verbosity | This module logs data into var/logs/mastercard.log - this switch control how much data is being logged, <br> Select any One option from below:<br>**Errors Only**  - this is default option, which only logs when an error happens.<br>**Everything**  - Logs everything related to error when it occurs (Like: API Response/status, errors, warning, etc).<br>**Errors and Warning Only**  - Logs only errors and warnings when error occured.<br>**Disabled**  - by selecting this, nothing will be logged when error will occured. |
-|Gateway Order ID Prefix |**Default Option**: Blank<br>In case one Merchant ID is used by multiple installation, then this field can be used to add a prefix to order id-s so that they will not conflict in the gateway. |
-|Custom Webhook Endpoint |**Default Option**: Blank<br>This field is mostly only used by development or with some complex web server rules, where the URL is not automatically detected correctly. |
+| Logging Verbosity | This module logs data into var/logs/mastercard.log - this switch controls how much data is being logged, <br> Select any One option from below:<br>**Errors Only**  - this is the default option, which only logs when an error happens.<br>**Everything**  - Logs everything related to the error when it occurs (Like API Response/status, errors, warning, etc).<br>**Errors and Warning Only**  - Logs only errors and warnings when an error occurs.<br>**Disabled**  - by selecting this, nothing will be logged when error will occured. |
+|Gateway Order ID Prefix |**Default Option**: Blank<br>In case one Merchant ID is used by multiple installations, then this field can be used to add a prefix to order id-s so that they will not conflict in the gateway. |
+|Custom Webhook Endpoint |**Default Option**: Blank<br>This field is mostly only used by development or with some complex webserver rules, where the URL is not automatically detected correctly. |
 
 It is suggested to keep these fields with assigned default values. Please first consult with the Technical team / Mastercard Payment Gateway Module support before changing these settings.
