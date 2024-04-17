@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2019-2023 Mastercard
+ * Copyright (c) 2019-2024 Mastercard
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ require_once(dirname(__FILE__).'/model/MpgsVoid.php');
 class Mastercard extends PaymentModule
 {
     const PAYMENT_CODE = 'MPGS';
-    const MPGS_API_VERSION = '73';
+    const MPGS_API_VERSION = '78';
     const MPGS_3DS_LIB_VERSION = '1.3.0';
     const PAYMENT_CHECKOUT_SESSION_PURCHASE = 'PURCHASE';
     const PAYMENT_CHECKOUT_SESSION_AUTHORIZE = 'AUTHORIZE';
@@ -67,7 +67,7 @@ class Mastercard extends PaymentModule
         $this->module_key = '5e026a47ceedc301311e969c872f8d41';
         $this->name = 'mastercard';
         $this->tab = 'payments_gateways';
-        $this->version = '1.4.0';
+        $this->version = '1.4.1';
         if (!defined('MPGS_VERSION')) {
             define('MPGS_VERSION', $this->version);
         }
@@ -320,16 +320,65 @@ class Mastercard extends PaymentModule
         return true;
     }
 
+    public function checkForUpdates()
+    {
+        // Get the latest release information from GitHub
+        $latestRelease = $this->getLatestGitHubVersion();
+
+        // Compare the latest release version with the current module version
+        if ($latestRelease !== null && version_compare($latestRelease['version'], $this->version, '>')) {
+            // Newer version available
+            return [
+                'available' => true,
+                'version' => $latestRelease['version'],
+                'download_url' => $latestRelease['download_url']
+            ];
+        } else {
+            // Module is up to date
+            return [
+                'available' => false,
+                'version' => $this->version
+            ];
+        }
+    }
+
+    private function getLatestGitHubVersion() {
+        $owner = 'fingent-corp';
+        $repo = 'gateway-prestashop-mastercard-module';
+        $url = "https://api.github.com/repos/{$owner}/{$repo}/releases/latest";
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_HEADER, 0);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mastercard');
+        $response = curl_exec($ch);
+        if (curl_errno($ch)) {
+            return null; 
+        }
+        curl_close($ch);
+        $data = json_decode($response, true);
+        
+        if (isset($data['tag_name']) && isset($data['assets'][0]['browser_download_url'])) {
+            return [
+                'version' => $data['tag_name'],
+                'download_url' => $data['assets'][0]['browser_download_url']
+            ];
+        } else {
+            return null;
+        }
+    }
+
+
     /**
      * @return string
      * @throws PrestaShopException
      */
     public function getContent()
     {
-        /**
-         * If values have been submitted in the form, process.
-         */
-        if (((bool)Tools::isSubmit('submitMastercardModule')) == true) {
+        // Initialize _html variable
+        $this->_html = '';
+
+        // Process form submission
+        if (Tools::isSubmit('submitMastercardModule')) {
             $this->_postValidation();
             if (!count($this->_postErrors)) {
                 $this->postProcess();
@@ -340,14 +389,51 @@ class Mastercard extends PaymentModule
             }
         }
 
+        // Add JavaScript file
         $this->context->controller->addJS($this->_path.'/views/js/back.js');
+
+        // Assign variables for templates
         $this->context->smarty->assign([
             'module_dir'             => $this->_path,
             'mpgs_gateway_validated' => Configuration::get('mpgs_gateway_validated'),
         ]);
-        $this->_html .= $this->display($this->local_path, 'views/templates/admin/configure.tpl');
+
+        // Fetch latest release information
+        $latestRelease = $this->checkForUpdates();
+        // Get the module version
+        $moduleVersion = $this->version;
+        $this->context->smarty->assign([
+            'latest_release' => $latestRelease,
+            'module_version' => $moduleVersion, // Pass the module version to the template
+        ]);
+
+        // Render notification template
+        $notificationContent = $this->display($this->local_path, 'views/templates/admin/update.tpl');
+
+        // Append notification content to _html
+        $this->_html .= $notificationContent;
+
+        // Render form success or error messages
+        if (isset($this->_htmlSuccess)) {
+            $this->_html .= $this->displayConfirmation($this->_htmlSuccess);
+        }
+        if (isset($this->_htmlWarning)) {
+            $this->_html .= $this->displayWarning($this->_htmlWarning);
+        }
+        if (isset($this->_htmlError)) {
+            $this->_html .= $this->displayError($this->_htmlError);
+        }
+
+        // Render main configuration template
+        $mainContent = $this->display($this->local_path, 'views/templates/admin/configure.tpl');
+
+        // Append main content to _html
+        $this->_html .= $mainContent;
+
+        // Render form
         $this->_html .= $this->renderForm();
 
+        // Return the final content
         return $this->_html;
     }
 

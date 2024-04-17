@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2019-2023 Mastercard
+ * Copyright (c) 2019-2024 Mastercard
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
  */
 
 use Http\Discovery\HttpClientDiscovery;
-use Http\Message\MessageFactory\GuzzleMessageFactory;
+use Nyholm\Psr7\Factory\Psr17Factory;
 use Http\Client\Common\Plugin\AuthenticationPlugin;
 use Http\Message\Authentication\BasicAuth;
 use Http\Client\Common\PluginClient;
@@ -36,13 +36,14 @@ use Http\Message\Formatter\SimpleFormatter;
 use Http\Client\Exception;
 use Http\Client\Common\Exception\ClientErrorException;
 use Http\Client\Common\Exception\ServerErrorException;
+use Http\Promise\promise;
 
 class ApiErrorPlugin implements Plugin
 {
     /**
      * @inheritdoc
      */
-    public function handleRequest(\Psr\Http\Message\RequestInterface $request, callable $next, callable $first)
+    public function handleRequest(\Psr\Http\Message\RequestInterface $request, callable $next, callable $first): Promise
     {
         $promise = $next($request);
 
@@ -107,7 +108,7 @@ class ApiLoggerPlugin implements Plugin
     /**
      * @inheritdoc
      */
-    public function handleRequest(\Psr\Http\Message\RequestInterface $request, callable $next, callable $first)
+    public function handleRequest(\Psr\Http\Message\RequestInterface $request, callable $next, callable $first): Promise
     {
         $reqBody = @json_decode($request->getBody(), true);
         if (json_last_error() !== JSON_ERROR_NONE) {
@@ -168,9 +169,9 @@ class GatewayResponseException extends \Exception
 class GatewayService
 {
     /**
-     * @var GuzzleMessageFactory
+     * @var MessageFactoryInterface
      */
-    protected $messageFactory;
+    protected $message_factory;
 
     /**
      * @var string
@@ -186,6 +187,13 @@ class GatewayService
      * @var string|null
      */
     protected $webhookUrl;
+
+    /**
+     * Stream factory variable
+     *
+     * @var StreamFactoryInterface
+     */
+    protected $stream_factory;
 
     /**
      * GatewayService constructor.
@@ -213,7 +221,7 @@ class GatewayService
             Configuration::get('mpgs_logging_level')
         ));
 
-        $this->messageFactory = new GuzzleMessageFactory();
+        $this->message_factory = new Psr17Factory();
 
         $this->apiUrl = "https://{$baseUrl}/api/rest/version/{$apiVersion}/merchant/{$merchantId}/";
 
@@ -414,13 +422,17 @@ class GatewayService
     public function process3dsResult($threeDSecureId, $paRes)
     {
         $uri = $this->apiUrl.'3DSecureId/'.$threeDSecureId;
-
-        $request = $this->messageFactory->createRequest('POST', $uri, array(), json_encode(array(
-            'apiOperation' => 'PROCESS_ACS_RESULT',
-            '3DSecure'     => array('paRes' => $paRes),
-        )));
-
-        $response = $this->client->sendRequest($request);
+        $request   = $this->message_factory->createRequest('POST', $uri);
+        $stream    = $this->message_factory->createStream( 
+                        wp_json_encode( 
+                            array(
+                                'apiOperation' => 'PROCESS_ACS_RESULT',
+                                '3DSecure'     => array('paRes' => $paRes),
+                            )
+                        )
+                    );
+        $request_body = $request->withBody( $stream );
+        $response = $this->client->sendRequest($request_body);
         $response = json_decode($response->getBody(), true);
 
         return $response;
@@ -442,14 +454,19 @@ class GatewayService
         $threeDSecureId = uniqid('3DS-', true);
         $uri = $this->apiUrl.'3DSecureId/'.$threeDSecureId;
 
-        $request = $this->messageFactory->createRequest('PUT', $uri, array(), json_encode(array(
-            'apiOperation' => 'CHECK_3DS_ENROLLMENT',
-            '3DSecure'     => $data,
-            'order'        => $order,
-            'session'      => $session,
-        )));
-
-        $response = $this->client->sendRequest($request);
+        $request = $this->message_factory->createRequest('PUT', $uri );
+        $stream    = $this->message_factory->createStream(
+                        wp_json_encode(
+                            array(
+                                'apiOperation'  => 'CHECK_3DS_ENROLLMENT',
+                                '3DSecure'     => $data,
+                                'order'        => $order,
+                                'session'      => $session,
+                            )
+                        )
+                    );
+        $request_body = $request->withBody( $stream );
+        $response = $this->client->sendRequest($request_body);
         $response = json_decode($response->getBody(), true);
 
         return $response;
@@ -472,23 +489,25 @@ class GatewayService
         $txnId = uniqid($orderId.'-', true);
         $uri = $this->apiUrl.'order/'.$orderId.'/transaction/'.$txnId;
 
-        $request = $this->messageFactory->createRequest('PUT', $uri, array(), json_encode(array(
-            'apiOperation'   => 'INITIATE_AUTHENTICATION',
-            'authentication' => [
-                'acceptVersions' => '3DS1,3DS2',
-                'channel'        => 'PAYER_BROWSER',
-                'purpose'        => 'PAYMENT_TRANSACTION',
-            ],
-            'session'        => $session,
-            'order'          => array_merge($order, array(
-                'reference' => $orderId,
-            )),
-            'transaction'    => array(
-                'reference' => $txnId,
-            ),
+        $request = $this->message_factory->createRequest('PUT', $uri);
+        $stream    = $this->message_factory->createStream(
+                         json_encode(array(
+                            'apiOperation'   => 'INITIATE_AUTHENTICATION',
+                            'authentication' => [
+                                'acceptVersions' => '3DS1,3DS2',
+                                'channel'        => 'PAYER_BROWSER',
+                                'purpose'        => 'PAYMENT_TRANSACTION',
+                            ],
+                            'session'        => $session,
+                            'order'          => array_merge($order, array(
+                                'reference' => $orderId,
+                            )),
+                            'transaction'    => array(
+                            'reference' => $txnId,
+                        ),
         )));
-
-        $response = $this->client->sendRequest($request);
+        $request_body = $request->withBody( $stream );
+        $response = $this->client->sendRequest($request_body);
         $response = json_decode($response->getBody(), true);
 
         $this->validateInitiateAuthenticationResponse($response);
@@ -526,7 +545,8 @@ class GatewayService
     ) {
         $uri = $this->apiUrl.'order/'.$orderId.'/transaction/'.$txnId;
 
-        $request = $this->messageFactory->createRequest('PUT', $uri, array(), json_encode(array(
+        $request = $this->message_factory->createRequest('PUT', $uri);
+        $stream    = $this->message_factory->createStream( json_encode(array(
             'apiOperation'   => 'AUTHENTICATE_PAYER',
             'authentication' => [
                 'redirectResponseUrl' => $responseUrl,
@@ -543,8 +563,8 @@ class GatewayService
             ),
             'customer'       => $customer,
         )));
-
-        $response = $this->client->sendRequest($request);
+        $request_body = $request->withBody( $stream );
+        $response = $this->client->sendRequest($request_body);
         $response = json_decode($response->getBody(), true);
 
         $this->validateAuthenticatePayerResponse($response);
@@ -587,8 +607,10 @@ class GatewayService
             $requestData['authentication'] = $authentication;
         }
 
-        $request = $this->messageFactory->createRequest('PUT', $uri, array(), json_encode($requestData));
-        $response = $this->client->sendRequest($request);
+        $request = $this->message_factory->createRequest('PUT', $uri);
+        $stream  = $this->message_factory->createStream( json_encode($requestData));
+        $request_body = $request->withBody( $stream );
+        $response = $this->client->sendRequest($request_body);
         $response = json_decode($response->getBody(), true);
 
         $this->validateHostedSessionUpdateResponse($response);
@@ -626,7 +648,8 @@ class GatewayService
         $txnId = $this->getUniqueTransactionId($orderId);
         $uri = $this->apiUrl.'session';
 
-        $request = $this->messageFactory->createRequest('POST', $uri, array(), json_encode(array(
+        $request = $this->message_factory->createRequest('POST', $uri);
+        $stream  = $this->message_factory->createStream(json_encode(array(
             'apiOperation'      => 'INITIATE_CHECKOUT',
             'partnerSolutionId' => $this->getSolutionId(),
             'order'             => array_merge($order, array(
@@ -648,7 +671,8 @@ class GatewayService
             ),
         )));
 
-        $response = $this->client->sendRequest($request);
+        $request_body = $request->withBody( $stream );
+        $response = $this->client->sendRequest($request_body);
         $response = json_decode($response->getBody(), true);
 
         $this->validateCheckoutSessionResponse($response);
@@ -721,9 +745,10 @@ class GatewayService
             $body['authentication'] = $authentication;
         }
 
-        $request = $this->messageFactory->createRequest('PUT', $uri, array(), json_encode($body));
-
-        $response = $this->client->sendRequest($request);
+        $request = $this->message_factory->createRequest('PUT', $uri);
+        $stream  = $this->message_factory->createStream(json_encode(array(json_encode($body))));
+        $request_body = $request->withBody( $stream );
+        $response = $this->client->sendRequest($request_body);
         $response = json_decode($response->getBody(), true);
 
         $this->validateTxnResponse($response);
@@ -799,9 +824,11 @@ class GatewayService
             $body['authentication'] = $authentication;
         }
 
-        $request = $this->messageFactory->createRequest('PUT', $uri, array(), json_encode($body));
+        $request = $this->message_factory->createRequest('PUT', $uri);
+        $stream  = $this->message_factory->createStream( json_encode($body));
 
-        $response = $this->client->sendRequest($request);
+        $request_body = $request->withBody( $stream );
+        $response = $this->client->sendRequest($request_body);
         $response = json_decode($response->getBody(), true);
 
         $this->validateTxnResponse($response);
@@ -823,7 +850,7 @@ class GatewayService
     {
         $uri = $this->apiUrl.'order/'.$orderId;
 
-        $request = $this->messageFactory->createRequest('GET', $uri);
+        $request = $this->message_factory->createRequest('GET', $uri);
         $response = $this->client->sendRequest($request);
 
         $response = json_decode($response->getBody(), true);
@@ -897,7 +924,7 @@ class GatewayService
     {
         $uri = $this->apiUrl.'order/'.$orderId.'/transaction/'.$txnId;
 
-        $request = $this->messageFactory->createRequest('GET', $uri);
+        $request = $this->message_factory->createRequest('GET', $uri);
         $response = $this->client->sendRequest($request);
 
         $response = json_decode($response->getBody(), true);
@@ -933,9 +960,11 @@ class GatewayService
         );
         $requestJson = json_encode($requestData);
 
-        $request = $this->messageFactory->createRequest('PUT', $uri, array(), $requestJson);
+        $request = $this->message_factory->createRequest('PUT', $uri);
+        $stream  = $this->message_factory->createStream($requestJson);
 
-        $response = $this->client->sendRequest($request);
+        $request_body = $request->withBody( $stream );
+        $response = $this->client->sendRequest($request_body);
         $response = json_decode($response->getBody(), true);
 
         $this->validateVoidResponse($response);
@@ -964,7 +993,8 @@ class GatewayService
         $txnId = $this->getUniqueTransactionId($orderId);
         $uri = $this->apiUrl.'order/'.$orderId.'/transaction/'.$txnId;
 
-        $request = $this->messageFactory->createRequest('PUT', $uri, array(), json_encode(array(
+        $request = $this->message_factory->createRequest('PUT', $uri);
+        $stream  = $this->message_factory->createStream(json_encode(array(
             'apiOperation'      => 'CAPTURE',
             'partnerSolutionId' => $this->getSolutionId(),
             'transaction'       => array(
@@ -978,7 +1008,8 @@ class GatewayService
             ),
         )));
 
-        $response = $this->client->sendRequest($request);
+        $request_body = $request->withBody( $stream );
+        $response = $this->client->sendRequest($request_body);
         $response = json_decode($response->getBody(), true);
 
         $this->validateTxnResponse($response);
@@ -1007,7 +1038,8 @@ class GatewayService
         $newTxnId = $this->getUniqueTransactionId($orderId);
         $uri = $this->apiUrl.'order/'.$orderId.'/transaction/'.$newTxnId;
 
-        $request = $this->messageFactory->createRequest('PUT', $uri, array(), json_encode(array(
+        $request = $this->message_factory->createRequest('PUT', $uri);
+        $stream  = $this->message_factory->createStream( json_encode(array(
             'apiOperation'      => 'REFUND',
             'partnerSolutionId' => $this->getSolutionId(),
             'transaction'       => array(
@@ -1021,7 +1053,8 @@ class GatewayService
             ),
         )));
 
-        $response = $this->client->sendRequest($request);
+        $request_body = $request->withBody( $stream );
+        $response = $this->client->sendRequest($request_body);
         $response = json_decode($response->getBody(), true);
 
         $this->validateTxnResponse($response);
@@ -1039,7 +1072,7 @@ class GatewayService
     {
         $uri = $this->apiUrl.'paymentOptionsInquiry';
 
-        $request = $this->messageFactory->createRequest('POST', $uri);
+        $request = $this->message_factory->createRequest('POST', $uri);
         $response = $this->client->sendRequest($request);
 
         $response = json_decode($response->getBody(), true);

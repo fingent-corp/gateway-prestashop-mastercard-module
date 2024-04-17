@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.4.1] - 2024-02-26
+### Changed
+- The module has been updated to API version 78.
+- Replaced the obsolete php-http/message-factory package with the actively maintained psr/http-factory package.
+- Added nyholm/psr7 package.
+
+### Enhancements
+- User will be notified, if there is a new plugin version available on Git Hub.
+
 ## [1.4.0] - 2023-08-02
 ### Changed
 - Enhanced Compatibility: Compatible with PHP 8.1 & Prestashop 8.0.x (tested with v8.0.4).

@@ -37,6 +37,12 @@ Version v1.4.0
 - Added the Checkout Interaction Model feature to the admin settings.
 - The Hosted session payment method is no longer supported.
 
+Version v1.4.1
+- The module has been updated to API version 78.
+- Replaced the obsolete php-http/message-factory package with the actively maintained psr/http-factory package.
+- Added nyholm/psr7 package.
+- User will be notified, if there is a new plugin version available on Git Hub.
+
 ## Feature Support
 
 PrestaShop Mastercard Payment Gateway Service module supports the following list of features:

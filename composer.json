@@ -1,13 +1,17 @@
 {
   "name": "mastercard/mastercard",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Mastercard Payment Gateway Services module for Prestashop",
   "type": "prestashop-module",
   "require": {
     "php-http/curl-client": "^2.3",
     "php-http/client-common": "^2.6",
-    "guzzlehttp/psr7": "^2.6",
-    "php-http/logger-plugin": "^1.3"
+    "guzzlehttp/psr7": "^2.6.2",
+    "php-http/logger-plugin": "^1.3",
+    "psr/log":"^2.0",
+    "psr/http-factory": "^1.0",
+    "psr/http-message": "^2.0",
+    "nyholm/psr7": "^1.8"
   },
   "license": "Apache-2.0",
   "minimum-stability": "alpha",
