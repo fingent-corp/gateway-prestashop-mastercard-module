@@ -43,6 +43,9 @@ Version v1.4.1
 - Added nyholm/psr7 package.
 - User will be notified, if there is a new plugin version available on Git Hub.
 
+Version v1.4.2
+- The module has been updated to API version 81.
+
 ## Feature Support
 
 PrestaShop Mastercard Payment Gateway Service module supports the following list of features:

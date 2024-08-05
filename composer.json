@@ -1,6 +1,6 @@
 {
   "name": "mastercard/mastercard",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Mastercard Payment Gateway Services module for Prestashop",
   "type": "prestashop-module",
   "require": {
