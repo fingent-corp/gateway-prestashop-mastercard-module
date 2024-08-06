@@ -37,7 +37,7 @@ require_once(dirname(__FILE__).'/model/MpgsVoid.php');
 class Mastercard extends PaymentModule
 {
     const PAYMENT_CODE = 'MPGS';
-    const MPGS_API_VERSION = '78';
+    const MPGS_API_VERSION = '81';
     const MPGS_3DS_LIB_VERSION = '1.3.0';
     const PAYMENT_CHECKOUT_SESSION_PURCHASE = 'PURCHASE';
     const PAYMENT_CHECKOUT_SESSION_AUTHORIZE = 'AUTHORIZE';
@@ -67,7 +67,7 @@ class Mastercard extends PaymentModule
         $this->module_key = '5e026a47ceedc301311e969c872f8d41';
         $this->name = 'mastercard';
         $this->tab = 'payments_gateways';
-        $this->version = '1.4.1';
+        $this->version = '1.4.2';
         if (!defined('MPGS_VERSION')) {
             define('MPGS_VERSION', $this->version);
         }

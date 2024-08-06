@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.4.2] - 2024-07-06
+### Changed
+- The module has been updated to API version 81.
+
 ## [1.4.1] - 2024-02-26
 ### Changed
 - The module has been updated to API version 78.
