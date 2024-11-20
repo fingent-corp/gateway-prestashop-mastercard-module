@@ -46,6 +46,10 @@ Version v1.4.1
 Version v1.4.2
 - The module has been updated to API version 81.
 
+Version v1.4.3
+- Enhanced Compatibility: Compatible with PHP 8.1 & PrestaShop 8.1.x (tested with v8.1.7).
+- The module has been updated to API version 84.
+
 ## Feature Support
 
 PrestaShop Mastercard Payment Gateway Service module supports the following list of features:

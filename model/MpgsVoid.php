@@ -21,7 +21,8 @@ class MpgsVoid extends ObjectModel
     public $order_id;
     public $total;
     public $transaction_id;
-
+    public $id_currency;
+    
     /**
      * @see ObjectModel::$definition
      */

@@ -364,6 +364,10 @@ class OrderStatusResponseHandler extends ResponseHandler
             $newStatus = Configuration::get('PS_OS_REFUND');
         }
 
+        if ($response['status'] == 'PARTIALLY_REFUNDED') {
+                $newStatus = Configuration::get('MPGS_OS_PARTIALLY_REFUNDED');
+        }
+
         if (!$newStatus) {
             $newStatus = Configuration::get('PS_OS_ERROR');
             $this->processor->logger->error(

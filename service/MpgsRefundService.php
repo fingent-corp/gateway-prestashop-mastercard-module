@@ -74,6 +74,7 @@ class MpgsRefundService
             $currency['iso_code']
         );
 
+
         $processor = new ResponseProcessor($this->module);
         $processor->handle($order, $response, $handlers);
 

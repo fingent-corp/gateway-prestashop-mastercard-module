@@ -37,7 +37,7 @@ require_once(dirname(__FILE__).'/model/MpgsVoid.php');
 class Mastercard extends PaymentModule
 {
     const PAYMENT_CODE = 'MPGS';
-    const MPGS_API_VERSION = '81';
+    const MPGS_API_VERSION = '84';
     const MPGS_3DS_LIB_VERSION = '1.3.0';
     const PAYMENT_CHECKOUT_SESSION_PURCHASE = 'PURCHASE';
     const PAYMENT_CHECKOUT_SESSION_AUTHORIZE = 'AUTHORIZE';
@@ -67,7 +67,7 @@ class Mastercard extends PaymentModule
         $this->module_key = '5e026a47ceedc301311e969c872f8d41';
         $this->name = 'mastercard';
         $this->tab = 'payments_gateways';
-        $this->version = '1.4.2';
+        $this->version = '1.4.3';
         if (!defined('MPGS_VERSION')) {
             define('MPGS_VERSION', $this->version);
         }
@@ -143,8 +143,6 @@ class Mastercard extends PaymentModule
                $this->registerHook('displayBackOfficeOrderActions') &&
                $this->registerHook('actionObjectOrderSlipAddAfter') &&
                $this->registerHook('displayBackOfficeHeader') &&
-               $this->upgrade_module_1_2_0() &&
-               $this->upgrade_module_1_3_0() &&
                $this->upgrade_module_1_3_3() &&
                $this->upgrade_module_1_3_6() &&
                $this->upgrade_module_1_3_7();
@@ -315,6 +313,28 @@ class Mastercard extends PaymentModule
             }
 
             Configuration::updateValue('MPGS_OS_FRAUD', (int)$order_state->id);
+        }
+        if (!Configuration::get('MPGS_OS_PARTIALLY_REFUNDED')
+            || !Validate::isLoadedObject(new OrderState(Configuration::get('MPGS_OS_PARTIALLY_REFUNDED')))) {
+            $order_state = new OrderState();
+            foreach (Language::getLanguages() as $language) {
+                $order_state->name[$language['id_lang']] = 'Partially Refunded';
+                $order_state->template[$language['id_lang']] = 'refund';
+            }
+            $order_state->send_email = true;
+            $order_state->color = '#01B887';
+            $order_state->hidden = false;
+            $order_state->delivery = false;
+            $order_state->logable = true;
+            $order_state->paid = true;
+            $order_state->invoice = false;
+            if ($order_state->add()) {
+                $source = _PS_ROOT_DIR_.'/img/os/7.gif';
+                $destination = _PS_ROOT_DIR_.'/img/os/'.(int)$order_state->id.'.gif';
+                copy($source, $destination);
+            }
+
+            Configuration::updateValue('MPGS_OS_PARTIALLY_REFUNDED', (int)$order_state->id);
         }
 
         return true;
@@ -919,6 +939,7 @@ class Mastercard extends PaymentModule
     {
         /** @var OrderSlip $res */
         $orderSlip = $params['object'];
+
         $order = new Order($orderSlip->id_order);
 
         if ($order->payment !== self::PAYMENT_CODE) {
@@ -936,7 +957,8 @@ class Mastercard extends PaymentModule
             $response = $refundService->execute(
                 $order,
                 array(
-                    new TransactionResponseHandler(),
+                    new TransactionResponseHandler(), 
+                    new TransactionStatusResponseHandler(),
                 ),
                 $amount
             );
@@ -947,6 +969,7 @@ class Mastercard extends PaymentModule
             $refund->transaction_id = $response['transaction']['id'];
             $refund->order_slip_id = $orderSlip->id;
             $refund->add();
+
         } catch (Exception $e) {
             $orderSlip->delete();
             Tools::redirectAdmin((new Link())->getAdminLink('AdminOrders', true, array(), array(
@@ -984,6 +1007,18 @@ class Mastercard extends PaymentModule
         $canReview = $order->current_state == Configuration::get('MPGS_OS_REVIEW_REQUIRED');
         $canAction = $isAuthorized || $canVoid || $canCapture || $canRefund;
 
+        $orderState = (int)$order->getCurrentState();
+        $hidePartialRefundButton = false;
+
+        // Assuming you have constants or configuration keys for "Refunded" and "Void" statuses
+        $refundedStateId = $order->current_state == Configuration::get('PS_OS_REFUND');
+        $voidStateId = $order->current_state == Configuration::get('PS_OS_CANCELED');
+
+        // Check if the order status is either "Refunded" or "Void"
+        if ($orderState == $refundedStateId || $orderState == $voidStateId) {
+            $hidePartialRefundButton = true;
+        }
+
         $this->smarty->assign(array(
             'module_dir'         => $this->_path,
             'order'              => $order,
@@ -999,6 +1034,7 @@ class Mastercard extends PaymentModule
             'refunds'            => MpgsRefund::getAllRefundsByOrderId($order->id),
             'has_voids'          => MpgsVoid::hasExistingVoids($order->id),
             'voids'              => MpgsVoid::getAllVoidsByOrderId($order->id),
+            'hidePartialRefundButton'=>  $hidePartialRefundButton ,
         ));
 
         return $this->display(__FILE__, $view);
@@ -1256,24 +1292,6 @@ class Mastercard extends PaymentModule
         }
 
         return GatewayService::numeric($amount);
-    }
-
-    /**
-     * @return bool
-     * @throws PrestaShopException
-     */
-    public function upgrade_module_1_2_0()
-    {
-        return Hook::registerHook($this, 'displayAdminOrderSideBottom');
-    }
-
-    /**
-     * @return bool
-     * @throws PrestaShopException
-     */
-    public function upgrade_module_1_3_0()
-    {
-        return Hook::registerHook($this, 'actionObjectOrderSlipAddAfter');
     }
 
     /**
