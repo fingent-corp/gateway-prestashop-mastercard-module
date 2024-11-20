@@ -7,7 +7,7 @@ This plugin is a payment option on your PrestaShop checkout page.
 The latest release of the plugin has the following system requirements:
 
 - PHP version 8.1 or higher is mandatory.
-- PrestaShop version 8.0.4 or later is required. However, we strongly recommend using the latest available version of PrestaShop for optimal performance.
+- PrestaShop version 8.1.x (tested with v8.1.7) is required.
 
 ## Documentation
 
