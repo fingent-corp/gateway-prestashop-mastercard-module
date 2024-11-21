@@ -7,7 +7,7 @@ This plugin is a payment option on your PrestaShop checkout page.
 The latest release of the plugin has the following system requirements:
 
 - PHP version 8.1 or higher is mandatory.
-- PrestaShop version 8.0.4 or later is required. However, we strongly recommend using the latest available version of PrestaShop for optimal performance.
+- PrestaShop version 8.1.x (tested with v8.1.7) is required.
 
 ## Documentation
 
@@ -45,6 +45,10 @@ Version v1.4.1
 
 Version v1.4.2
 - The module has been updated to API version 81.
+
+Version v1.4.3
+- Enhanced Compatibility: Compatible with PHP 8.1 & PrestaShop 8.1.x (tested with v8.1.7).
+- The module has been updated to API version 84.
 
 ## Feature Support
 
@@ -123,13 +127,13 @@ Capture Payment is used for processing transactions and transferring funds into 
 - Under the Order detail page, when clicking on the “Capture Payment” button it will process transactions and the amount of the order will be transferred to the merchant's account.
 - After clicking on the “Capture Payment” button, the gateway will capture the transaction and then you will see a success message. The order status will also change to “Payment Accept”.
 
-![Order detail payment](docs/images/order-detail-payment.png "Order detail payment")
+![Order detail payment](docs/images/capture-payment.png "capture payment")
 
 ### Void Transaction
 
-Void Transaction is used to cancel the order. By clicking on the “Void Transaction” button, the order will be canceled automatically and the amount of the order will be credited to the user’s card (if payment has been captured).
+Void Transaction is used to cancel the order. By clicking on the “Void” button, the order will be canceled automatically and the amount of the order will be credited to the user’s card (if payment has been captured).
 
-![Void transaction](docs/images/void-transaction.png "Void transaction")
+![Void transaction](docs/images/void.png "Void transaction")
 
 ### Refund Payment
 

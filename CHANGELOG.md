@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.4.3] - 2024-11-21
+### Changed
+- Enhanced Compatibility: Compatible with PHP 8.1 & PrestaShop 8.1.x (tested with v8.1.7).
+- The module has been updated to API version 84.
+
 ## [1.4.2] - 2024-07-06
 ### Changed
 - The module has been updated to API version 81.

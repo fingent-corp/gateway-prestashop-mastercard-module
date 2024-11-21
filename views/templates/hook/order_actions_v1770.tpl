@@ -22,7 +22,7 @@
                 {if $can_void}
                     <a id="desc-order-void_payment" class="btn btn-primary" href="{$link->getAdminLink('AdminMpgs')|escape:'html':'UTF-8'}&amp;action=void&amp;id_order={$order->id|intval}">
                         <i class="material-icons">close</i>
-                        {l s='Void Authorization' mod='mastercard'}
+                        {l s='Void' mod='mastercard'}
                     </a>
                 {/if}
 
@@ -129,3 +129,18 @@
   </div>
 </div>
 {/if}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var hidePartialRefundButton = {$hidePartialRefundButton|json_encode};
+
+        if (hidePartialRefundButton) {
+            var partialRefundButtons = document.getElementsByClassName('partial-refund-display');
+            if (partialRefundButtons.length > 0) {
+                for (var i = 0; i < partialRefundButtons.length; i++) {
+                    partialRefundButtons[i].style.display = 'none';
+                }
+            }
+        }
+    });
+</script>

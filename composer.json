@@ -1,6 +1,6 @@
 {
   "name": "mastercard/mastercard",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Mastercard Payment Gateway Services module for Prestashop",
   "type": "prestashop-module",
   "require": {
@@ -11,7 +11,8 @@
     "psr/log":"^2.0",
     "psr/http-factory": "^1.0",
     "psr/http-message": "^2.0",
-    "nyholm/psr7": "^1.8"
+    "nyholm/psr7": "^1.8",
+    "symfony/options-resolver": "^5.0"
   },
   "license": "Apache-2.0",
   "minimum-stability": "alpha",
