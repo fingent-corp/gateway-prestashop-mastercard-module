@@ -7,7 +7,7 @@ This plugin is a payment option on your PrestaShop checkout page.
 The latest release of the plugin has the following system requirements:
 
 - PHP version 8.1 or higher is mandatory.
-- PrestaShop version 8.1.x (tested with v8.1.7) is required.
+- PrestaShop version 8.2.x (tested with v8.2.0) is required.
 
 ## Documentation
 
@@ -49,6 +49,11 @@ Version v1.4.2
 Version v1.4.3
 - Enhanced Compatibility: Compatible with PHP 8.1 & PrestaShop 8.1.x (tested with v8.1.7).
 - The module has been updated to API version 84.
+
+Version v1.4.4
+- Enhanced Compatibility: Compatible with PHP 8.1 & PrestaShop 8.2.x (tested with v8.2.0).
+- The module has been updated to API version 100.
+- As part of plugin analytics, the plugin will start capturing download count from GitHub and the active installation count. The Active count, Store Name, Store URL, and the Country configured in the PrestaShop Admin page will be captured once the Live Mode is enabled and the Merchant ID and API Password are saved in the configuration page.
 
 ## Feature Support
 

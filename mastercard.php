@@ -36,13 +36,15 @@ require_once(dirname(__FILE__).'/model/MpgsVoid.php');
  */
 class Mastercard extends PaymentModule
 {
-    const PAYMENT_CODE = 'MPGS';
-    const MPGS_API_VERSION = '84';
-    const MPGS_3DS_LIB_VERSION = '1.3.0';
-    const PAYMENT_CHECKOUT_SESSION_PURCHASE = 'PURCHASE';
+    const PAYMENT_CODE                       = 'MPGS';
+    const MPGS_API_VERSION                   = '100';
+    const MPGS_3DS_LIB_VERSION               = '1.3.0';
+    const PAYMENT_CHECKOUT_SESSION_PURCHASE  = 'PURCHASE';
     const PAYMENT_CHECKOUT_SESSION_AUTHORIZE = 'AUTHORIZE';
-    const PAYMENT_CHECKOUT_EMBEDDED_METHOD = 'EMBEDDED';
-    const PAYMENT_CHECKOUT_REDIRECT_METHOD = 'REDIRECT';
+    const PAYMENT_CHECKOUT_EMBEDDED_METHOD   = 'EMBEDDED';
+    const PAYMENT_CHECKOUT_REDIRECT_METHOD   = 'REDIRECT';
+    const ENTERPRISE_MODULE_KEY              = '3cfa292619f39b06479454445cd1c7668bd6ad752b74e78af280f428eeff5226';
+    const MPGS_API_URL                       = 'https://mpgs.fingent.wiki/wp-json/mpgs/v2/update-repo-status';
 
     /**
      * @var string
@@ -65,27 +67,27 @@ class Mastercard extends PaymentModule
     public function __construct()
     {
         $this->module_key = '5e026a47ceedc301311e969c872f8d41';
-        $this->name = 'mastercard';
-        $this->tab = 'payments_gateways';
-        $this->version = '1.4.3';
+        $this->name       = 'mastercard';
+        $this->tab        = 'payments_gateways';
+        $this->version    = '1.4.4';
         if (!defined('MPGS_VERSION')) {
             define('MPGS_VERSION', $this->version);
         }
-        $this->author = 'MasterCard';
-        $this->need_instance = 1;
-        $this->controllers = array('payment', 'validation');
+        $this->author                 = 'MasterCard';
+        $this->need_instance          = 1;
+        $this->controllers            = array('payment', 'validation');
         $this->ps_versions_compliancy = array('min' => '1.7.1.0', 'max' => _PS_VERSION_);
-        $this->currencies = true;
-        $this->currencies_mode = 'checkbox';
+        $this->currencies             = true;
+        $this->currencies_mode        = 'checkbox';
 
         /**
          * Set $this->bootstrap to true if your module is compliant with bootstrap (PrestaShop 1.6)
          */
-        $this->bootstrap = true;
+        $this->bootstrap        = true;
         parent::__construct();
-        $this->controllerAdmin = 'AdminMpgs';
-        $this->displayName = $this->l('Mastercard Payment Gateway Services');
-        $this->description = $this->l('Mastercard Payment Gateway Services module for Prestashop');
+        $this->controllerAdmin  = 'AdminMpgs';
+        $this->displayName      = $this->l('Mastercard Payment Gateway Services');
+        $this->description      = $this->l('Mastercard Payment Gateway Services module for Prestashop');
     }
 
     /**
@@ -891,7 +893,7 @@ class Mastercard extends PaymentModule
         }
 
         $this->_html .= $this->displayConfirmation($this->l('Settings updated'));
-
+        $this->enterprisedatasend();
         // Test the Gateway connection
         try {
             $client = new GatewayService(
@@ -1008,12 +1010,15 @@ class Mastercard extends PaymentModule
         $canAction = $isAuthorized || $canVoid || $canCapture || $canRefund;
 
         $orderState = (int)$order->getCurrentState();
-        $hidePartialRefundButton = false;
+        $hidePartialRefundButton = true;
 
         // Assuming you have constants or configuration keys for "Refunded" and "Void" statuses
         $refundedStateId = $order->current_state == Configuration::get('PS_OS_REFUND');
         $voidStateId = $order->current_state == Configuration::get('PS_OS_CANCELED');
-
+        $paymentStateId = $order->current_state == Configuration::get('PS_OS_PAYMENT');
+        if($orderState == $paymentStateId){
+            $hidePartialRefundButton = false;
+        }
         // Check if the order status is either "Refunded" or "Void"
         if ($orderState == $refundedStateId || $orderState == $voidStateId) {
             $hidePartialRefundButton = true;
@@ -1346,5 +1351,69 @@ class Mastercard extends PaymentModule
         EOT;
 
         return DB::getInstance()->execute($query);
+    }
+
+    public function enterprisedatasend()
+    {
+        $countryId      = Configuration::get('PS_COUNTRY_DEFAULT');
+        $country        = new Country($countryId);
+        $countryName    = $country->name[$this->context->language->id];
+        $countryCode    = $country->iso_code;
+        $flag           = Configuration::get('ENTERPRISE_SET_FLAG');
+        $version        = Configuration::get('ENTERPRISE_VERSION');
+        $storeName      = Configuration::get('PS_SHOP_NAME');
+        $storeUrl       = Configuration::get('PS_SHOP_DOMAIN');
+        $publicKey      = Configuration::get('mpgs_merchant_id');
+        $privateKey     = Configuration::get('mpgs_api_password');
+        $data[]         = null;
+        if (!empty($publicKey && $privateKey)) {
+            if (($version != $this->version) && $flag || empty($flag)) {
+                $data = [
+                    'repo_name'      => 'gateway-prestashop-mastercard-module',
+                    'plugin_type'    => 'enterprise',
+                    'tag_name'       => $this->version,
+                    'latest_release' => '1',
+                    'country_code'   => $countryCode,
+                    'country'        => $countryName,
+                    'shop_name'      => $storeName,
+                    'shop_url'       => $storeUrl,
+                ];
+                Configuration::updateValue('ENTERPRISE_SET_FLAG', 1);
+                Configuration::updateValue('ENTERPRISE_VERSION', $this->version);
+            } else {
+                return null;
+            }
+        }
+        
+        // Define the URL for the WordPress REST API endpoint
+        $url         = self::MPGS_API_URL;
+        // Set your Bearer token here
+        $bearerToken = self::ENTERPRISE_MODULE_KEY;
+        // Set up headers
+        $headers     = [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $bearerToken,
+        ];
+        // Initialize cURL
+        $ch          = curl_init($url);
+
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+
+        // Execute the request
+        $response = curl_exec($ch);
+        // Check for errors
+        if (curl_errno($ch)) {
+            $errorMsg = curl_error($ch);
+            curl_close($ch);
+            return 'Error: ' . $errorMsg;
+        }
+
+        // Close cURL
+        curl_close($ch);
+        return $response;
     }
 }
