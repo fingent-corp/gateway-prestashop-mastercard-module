@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.4.4] - 2025-02-13
+### Added
+- Enhanced Compatibility: Compatible with PHP 8.1 & PrestaShop 8.2.x (tested with v8.2.0).
+- The module has been updated to API version 100.
+- As part of plugin analytics, the plugin will start capturing download count from GitHub and the active installation count. The Active count, Store Name, Store URL, and the Country configured in the PrestaShop Admin page will be captured once the Live Mode is enabled and the Merchant ID and API Password are saved in the configuration page.
+
 ## [1.4.3] - 2024-11-21
 ### Changed
 - Enhanced Compatibility: Compatible with PHP 8.1 & PrestaShop 8.1.x (tested with v8.1.7).
