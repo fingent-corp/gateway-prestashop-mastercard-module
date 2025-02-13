@@ -122,6 +122,9 @@ Below are list of Hosted Checkout method configurations which you will find in t
 |Payment Model|Select any One option from below: <br>**Purchase**  - Fund will be transferred to the merchant account as soon as the user’s entered card details have been successfully verified and the order is placed. <br>**Authorize**  - 2-stage process; where once an order is placed, it will only authorize the user’s card details. The payment amount needs to be captured manually by the merchant. |
 |Checkout Interaction Model |Select any One option from below: <br>**Embedded**  - Show a hosted payment form embedded into the merchant site. <br> **Hosted Payment Page**  - Redirect to a hosted payment page to complete the payment.|
 
+## Disclaimer!
+Starting from version 1.4.4, the plugin will collect analytics data, including the plugin download count from GitHub and the active installation count. The Active count, Store Name, Store URL, and the Country configured in the PrestaShop Admin page will be captured once the Live Mode is enabled and the Merchant ID and API Password are saved in the configuration page.
+
 ## Back-office Operations
 If the Authorize payment method has been selected, then Funds need to be captured or refunded manually.
 
