@@ -1,4 +1,4 @@
-# Mastercard Payment Gateway Services module for PrestaShop
+# Mastercard Gateway module for PrestaShop
 
 This plugin is a payment option on your PrestaShop checkout page.
 
@@ -24,7 +24,7 @@ Versions v1.3.5
 - Add 3DS2 support.
 
 Versions v1.3.7
-- The refund is failing if the Gateway Order ID Prefix field is longer than 41.
+- The refund fails if the Gateway Order ID Prefix field is longer than 41.
 - It's impossible to void authorized transactions on the newest versions of PrestaShop.
 - Admin is redirected to the Order Listing instead of the Order View page after actions produced by the module.
 
@@ -53,7 +53,7 @@ Version v1.4.3
 Version v1.4.4
 - Enhanced Compatibility: Compatible with PHP 8.1 & PrestaShop 8.2.x (tested with v8.2.0).
 - The module has been updated to API version 100.
-- As part of plugin analytics, the plugin will start capturing download count from GitHub and the active installation count. The Active count, Store Name, Store URL, and the Country configured in the PrestaShop Admin page will be captured once the Live Mode is enabled and the Merchant ID and API Password are saved in the configuration page.
+- As part of plugin analytics, the plugin will start capturing the download count from GitHub and the active installation count. The Active count, Store Name, Store URL, and the Country configured in the PrestaShop Admin page will be captured once the Live Mode is enabled and the Merchant ID and API Password are saved on the configuration page.
 
 ## Feature Support
 
