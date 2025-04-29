@@ -17,8 +17,9 @@ With this gateway, you don’t have to handle or store customer card/account det
 ## Compatibility
 
 The latest release of the plugin has the following system requirements:
-    - PHP version 8.1 or higher is mandatory.
-    - PrestaShop version 8.2.x (tested with v8.2.0) is required.
+
+- PHP version 8.1 or higher is mandatory.
+- PrestaShop version 8.2.x (tested with v8.2.0) is required.
 
 ## Mastercard Payment Module Features
 
