@@ -1,7 +1,7 @@
 # Mastercard Gateway module for PrestaShop
 
 <p align="center" style="margin-top: 25px;">
-<a href="https://www.fingent.com/" target="_blank"><img alt="Fingent logo" height="50px" src="https://www.fingent.com/wp-content/uploads/Fingent-Logo-01.png"/></a>&nbsp;&nbsp;<img alt="MC logo" height="50px" src="https://mpgs.fingent.wiki/wp-content/uploads/2025/04/mastercard-logo.webp"/>
+<a href="https://www.fingent.com/" target="_blank"><img alt="Fingent logo" height="50px" src="https://www.fingent.com/wp-content/uploads/Fingent-Logo-01.png"/></a>&nbsp;&nbsp;<img alt="MC logo" height="50px" src="https://mpgs.fingent.wiki/wp-content/uploads/2025/04/mastercard-logo.png"/>
 </p>
 
 ## Overview Section
