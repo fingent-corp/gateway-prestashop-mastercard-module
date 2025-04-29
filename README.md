@@ -1,190 +1,73 @@
 # Mastercard Gateway module for PrestaShop
 
-This plugin is a payment option on your PrestaShop checkout page.
+<p align="center" style="margin-top: 25px;">
+<a href="https://www.fingent.com/" target="_blank"><img alt="Fingent logo" height="50px" src="https://www.fingent.com/wp-content/uploads/Fingent-Logo-01.png"/></a>&nbsp;&nbsp;<img alt="MC logo" height="50px" src="https://mpgs.fingent.wiki/wp-content/uploads/2025/04/mastercard-logo.webp"/>
+</p>
 
-## System Requirements
+## Overview Section
 
-The latest release of the plugin has the following system requirements:
+<a href="https://www.mastercard.com/global/en.html" target="_blank">Mastercard Inc.</a> is the <a href="https://www.investopedia.com/terms/m/mastercard-card.asp" target="_blank">world’s second-largest payment processing corporation</a>, providing a variety of payment solutions and services. We connect people, businesses, and organizations across over 210 countries and territories, creating opportunities for more people in more places, now and for the future. This module lets you add multiple payment options to your checkout, enabling secure credit, debit and account payments on your PrestaShop-powered website.
 
-- PHP version 8.1 or higher is mandatory.
-- PrestaShop version 8.2.x (tested with v8.2.0) is required.
+Payments made through this module are processed using the trusted Mastercard Gateway. MasterCard Gateway securely handles card/account details, following strict legal and regulatory requirements, ensuring a safe experience for both businesses and customers.
 
-## Documentation
+We carefully monitor every transaction to catch and stop fraud, making sure your payments are safe and secure. Your sensitive payment details, like card/account information, are handled and stored on servers with the highest level of security certification, that is Payment Card Industry (PCI) Level 1.
 
-The official documentation for this module is available at: https://mpgs.fingent.wiki/target/prestashop-mastercard-payment-gateway-services
-
-## Support
-
-For customer support: https://mpgsfgs.atlassian.net/servicedesk/customer/portals
+With this gateway, you don’t have to handle or store customer card/account details yourself. This makes meeting PCI compliance easier for your business. You can focus on running your store while the gateway securely processes payments for you.
 
 ## Compatibility
 
-Versions v1.3.5
-- Add support for the "Enforce Unique Order Reference" and "Enforce Unique Merchant Transaction Reference" gateway features.
-- Add 3DS2 support.
+The latest release of the plugin has the following system requirements:
+    - PHP version 8.1 or higher is mandatory.
+    - PrestaShop version 8.2.x (tested with v8.2.0) is required.
 
-Versions v1.3.7
-- The refund fails if the Gateway Order ID Prefix field is longer than 41.
-- It's impossible to void authorized transactions on the newest versions of PrestaShop.
-- Admin is redirected to the Order Listing instead of the Order View page after actions produced by the module.
+## Mastercard Payment Module Features
 
-Version v1.3.8
-- The products are removed from the customer's shopping cart if the payment fails.
+The Mastercard Payment Module is packed with tools to make payment processing easier and safer for your business. Here's a quick look at its main features:
 
-Version v1.4.0
-- Enhanced Compatibility: Compatible with PHP 8.1 & PrestaShop 8.0.x (tested with v8.0.4).
-- The module has been updated to API version 73.
-- Added the Checkout Interaction Model feature to the admin settings.
-- The Hosted session payment method is no longer supported.
+**1. Payment Methods -** Defines the types of payment options supported, which are:
 
-Version v1.4.1
-- The module has been updated to API version 78.
-- Replaced the obsolete php-http/message-factory package with the actively maintained psr/http-factory package.
-- Added nyholm/psr7 package.
-- User will be notified, if there is a new plugin version available on Git Hub.
+   - **Card Payments**<br/>
+Easily and securely accept both credit and debit card payments. This feature works with major card brands, making it simple and reliable for your customers to pay.
 
-Version v1.4.2
-- The module has been updated to API version 81.
+   - **Google Pay (Supported in Hosted Checkout Only)**<br/>
+With Google Pay, customers can quickly and easily pay on the hosted checkout page. To enable this option, ensure your Merchant Identification Number (MID) is configured for Google Pay. This makes payments smooth and hassle-free, allowing customers to complete transactions with just a few taps.
 
-Version v1.4.3
-- Enhanced Compatibility: Compatible with PHP 8.1 & PrestaShop 8.1.x (tested with v8.1.7).
-- The module has been updated to API version 84.
+**2. Checkout and Payment Integration -** This feature focuses on the method of collecting payment details from customers:
 
-Version v1.4.4
-- Enhanced Compatibility: Compatible with PHP 8.1 & PrestaShop 8.2.x (tested with v8.2.0).
-- The module has been updated to API version 100.
-- As part of plugin analytics, the plugin will start capturing the download count from GitHub and the active installation count. The Active count, Store Name, Store URL, and the Country configured in the PrestaShop Admin page will be captured once the Live Mode is enabled and the Merchant ID and API Password are saved on the configuration page.
+   - **Hosted Checkout**<br/>
+This feature lets your customers enter their payment details on a ready-made secure checkout page provided directly by Mastercard. It keeps sensitive information safe while giving your customers a smooth and hassle-free payment experience.
 
-## Feature Support
+**3. Fraud Prevention and Security -** This feature enhances security and protects against fraud:
 
-PrestaShop Mastercard Payment Gateway Service module supports the following list of features:
+   - **Address Verification Service (AVS)**<br/>
+AVS helps prevent fraud by checking the billing address provided during a payment to make sure it matches the one on file with the cardholder's bank. This helps confirm that the person making the payment is the actual cardholder. To use AVS, it must be activated on your MID.
 
-- Card payments
-- Hosted Checkout
-- Capture Payment
-- Void Transaction
-- Full refund
-- Partial refund
+**4. Transaction Management -** These features support the processing and management of transactions:
 
-## Installation
+   - **Capture Payments**<br/>
+This feature lets you manually process payments for authorized orders directly from your system. It gives you more control over how payments are handled.
 
-1. Make a backup of your site before applying new mods etc.
-2. Download the .zip file of the latest release of the extension from https://github.com/fingent-corp/gateway-prestashop-mastercard-module/
-3. Go to Admin → Modules → Module Manager → Upload a Module and upload the downloaded .zip file.
-4. After uploading the PrestaShop Module, click the Configure button.
+   - **Void Transaction**<br/>
+The void transaction feature lets you cancel an order before it's invoiced or completed. This option is usually available for 'Authorize' transactions, where the funds are reserved but not yet charged or billed.
 
+   - **Full Refunds**<br/>
+You can refund the entire amount of the transaction back to the customer's account. This is helpful when a complete order needs to be cancelled or returned.
 
-## Configuration
+   - **Partial Refunds**<br/>
+This feature lets you refund only part of an order, giving the customer the specific amount they are entitled to.
 
-### General Settings
+### Disclaimer!
 
-Once you have the Mastercard Payment Gateway Service module installed, you can configure the module from the admin panel.
-
-Find the relevant Configure button under your Module Manager:
-
-![Configure button](docs/images/configure-button.png "Configure button")
-
-
-Firstly, it’s important to configure your gateway credentials in TEST mode and make sure that everything works.
-
-Note: that if gateway credentials are not configured correctly, you can not enable any of the module's payment methods.
-
-If the gateway credentials are incorrect for any reason, there will be a warning displayed at the top of the configuration page.
-
-![Incorrect credentails](docs/images/incorrect-credentails.png "Incorrect credentails")
-
-The General Settings view:
-
-![General setting view](docs/images/general-setting-view.png "General setting view")
-
-| Name | Description |
-|--|--|
-| Live Mode | Yes/No. Toggles between Test and Live mode. Both modes have their own set of credential fields which you need to fill separately. It gives you the ability to switch between modes without re-entering your credentials every time. |
-| API Endpoint | The API endpoint should be selected based on your account region.|
-|Send Line Items |Yes/No. This setting allows you to choose if you want shopping cart data to be sent to the gateway, this includes product information, total, etc. |
-|Test Merchant ID / Merchant ID |Your Merchant ID. |
-|Test API Password / API Password | Your merchant API password.|
-|Test Webhook Secret / Webhook Secret | If webhook support is enabled, then enter your webhook secret here.|
-
-## Hosted Checkout Integration
-
-The Hosted Checkout model allows you to collect payment details from your payer through a payment page by the payment gateway. You never see or handle payment details directly because these are collected by the hosted payment interface and submitted directly from the payer's browser to the payment gateway.
-
-Below are list of Hosted Checkout method configurations which you will find in the administration interface:
-
-![Hosted checkout settings](docs/images/hosted-checkout-settings.png "Hosted checkout settings")
-
-|Name|Description  |
-|--|--|
-|Enabled | Two Options are available: <br> **YES** - to enable this payment method for Mastercard Payment Gateway Module <br> **NO** - to disable this payment method |
-|Title |The Text mentioned here will appear on the front-end checkout page/payment method section. |
-|Theme| Leave blank unless indicated by your payment provider. |
-|Payment Model|Select any One option from below: <br>**Purchase**  - Fund will be transferred to the merchant account as soon as the user’s entered card details have been successfully verified and the order is placed. <br>**Authorize**  - 2-stage process; where once an order is placed, it will only authorize the user’s card details. The payment amount needs to be captured manually by the merchant. |
-|Checkout Interaction Model |Select any One option from below: <br>**Embedded**  - Show a hosted payment form embedded into the merchant site. <br> **Hosted Payment Page**  - Redirect to a hosted payment page to complete the payment.|
-
-## Disclaimer!
 Starting from version 1.4.4, the plugin will collect analytics data, including the plugin download count from GitHub and the active installation count. The Active count, Store Name, Store URL, and the Country configured in the PrestaShop Admin page will be captured once the Live Mode is enabled and the Merchant ID and API Password are saved in the configuration page.
 
-## Back-office Operations
-If the Authorize payment method has been selected, then Funds need to be captured or refunded manually.
+## Documentation
 
-### To Capture Funds
+The official documentation for this module is available on the <a href="https://mpgs.fingent.wiki/target/prestashop-mastercard-payment-gateway-services" target="_blank">Wiki site</a>.
 
-Capture Payment is used for processing transactions and transferring funds into the merchant’s account.
+## Installation of Module
 
-- Under the Order detail page, when clicking on the “Capture Payment” button it will process transactions and the amount of the order will be transferred to the merchant's account.
-- After clicking on the “Capture Payment” button, the gateway will capture the transaction and then you will see a success message. The order status will also change to “Payment Accept”.
+For more information, please refer to the <a href="https://mpgs.fingent.wiki/enterprise/prestashop-mastercard-gateway/installation" target="_blank">Wiki documentation</a>.
 
-![Order detail payment](docs/images/capture-payment.png "capture payment")
+## Support
 
-### Void Transaction
-
-Void Transaction is used to cancel the order. By clicking on the “Void” button, the order will be canceled automatically and the amount of the order will be credited to the user’s card (if payment has been captured).
-
-![Void transaction](docs/images/void.png "Void transaction")
-
-### Refund Payment
-
-Once Payment has been captured by the merchant using the Capture Payment option, the merchant may be later required to refund the payment.
-
-#### Full Refund
-
-- Select the Order for which payment has been captured and now the amount needs to be refunded to the user.
-
-- Goto that order detail page.
-
-- Check the Mastercard Payment Action (Online) tab.
-
-- Here, the Full Refund button will be found from where the merchant can refund the full amount captured for that order.  
-
-![Full refund](docs/images/refund.png "Full refund")
-
-- On clicking on the Full Refund button, the amount will be refunded to the user.
-
-- To Restock the ordered product, you will need to the process of creating a PrestaShop Refund on top of the Mastercard Payment Gateway module refund process
-
-#### Partial Refund
-
-- Select the Order for which payment has been captured and now the amount needs to be refunded to the user.
-
-- Goto that order detail page.
-
-- Here, the Partial Refund button will be found from where the merchant can refund the amount captured for that order.  
-
-![Partial refund](docs/images/partial-refund.png "Partial refund")
-
-- On clicking on the Partial Refund button, the partial amount can be refunded to the user.
-
-## Advanced Configurations
-
-Below is the list of advanced configurations for the Mastercard Payment Gateway Service module.
-
-![Advance configuration](docs/images/advance-configuration.png "Advance configuration")
-
-|Name|Description  |
-|--|--|
-| Logging Verbosity | This module logs data into var/logs/mastercard.log - this switch controls how much data is being logged, <br> Select any One option from below:<br>**Errors Only**  - this is the default option, which only logs when an error happens.<br>**Everything**  - Logs everything related to the error when it occurs (Like API Response/status, errors, warning, etc).<br>**Errors and Warning Only**  - Logs only errors and warnings when an error occurs.<br>**Disabled**  - by selecting this, nothing will be logged when error will occured. |
-|Gateway Order ID Prefix |**Default Option**: Blank<br>In case one Merchant ID is used by multiple installations, then this field can be used to add a prefix to order id-s so that they will not conflict in the gateway. |
-|Custom Webhook Endpoint |**Default Option**: Blank<br>This field is mostly only used by development or with some complex webserver rules, where the URL is not automatically detected correctly. |
-
-It is suggested to keep these fields with assigned default values. Please first consult with the Technical team / Mastercard Payment Gateway Module support before changing these settings.
+For additional support, please visit the <a href="https://mpgsfgs.atlassian.net/servicedesk/customer/portals" target="_blank">Support Portal</a>.
