@@ -18,8 +18,8 @@ With this gateway, you don’t have to handle or store customer card/account det
 
 The latest release of the plugin has the following system requirements:
 
-- PHP version 8.1 or higher is mandatory.
-- PrestaShop version 8.2.x (tested with v8.2.0) is required.
+   - PHP version 8.1 or higher is mandatory.
+   - PrestaShop version 8.2.x (tested with v8.2.0) is required.
 
 ## Mastercard Payment Module Features
 
@@ -63,7 +63,7 @@ Starting from version 1.4.4, the plugin will collect analytics data, including t
 
 ## Documentation
 
-The official documentation for this module is available on the <a href="https://mpgs.fingent.wiki/target/prestashop-mastercard-payment-gateway-services" target="_blank">Wiki site</a>.
+The official documentation for this module is available on the <a href="https://mpgs.fingent.wiki/enterprise/prestashop-mastercard-gateway/overview-and-feature-support" target="_blank">Wiki site</a>.
 
 ## Installation of Module
 
