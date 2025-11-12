@@ -61,6 +61,7 @@
 </script>
 
 {if $has_refunds}
+
 <div class="card mt-2" id="view_order_payments_block">
     <div class="card-header">
         <h3 class="card-header-title">
@@ -129,11 +130,9 @@
   </div>
 </div>
 {/if}
-
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var hidePartialRefundButton = {$hidePartialRefundButton|json_encode};
-
         if (hidePartialRefundButton) {
             var partialRefundButtons = document.getElementsByClassName('partial-refund-display');
             if (partialRefundButtons.length > 0) {

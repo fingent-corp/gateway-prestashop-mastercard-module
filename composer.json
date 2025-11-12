@@ -1,6 +1,6 @@
 {
   "name": "mastercard/mastercard",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "Mastercard Payment Gateway Services module for Prestashop",
   "type": "prestashop-module",
   "require": {
@@ -20,5 +20,16 @@
     "allow-plugins": {
       "php-http/discovery": true
     }
+  },
+  "autoload": {
+    "psr-4": {
+        "Fingent\\Mastercard\\Controllers\\": "controllers/",
+        "Fingent\\Mastercard\\Service\\": "service/",
+        "Fingent\\Mastercard\\Handlers\\": "handlers/",
+        "Fingent\\Mastercard\\Model\\": "model/",
+        "Fingent\\Mastercard\\Gateway\\": "gateway/",
+        "Fingent\\Mastercard\\Api\\": "api/"
+    }
   }
+
 }

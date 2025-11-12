@@ -46,7 +46,7 @@
             if (resultIndicator) {
                 var result = (resultIndicator === data.successIndicator) ? "SUCCESS" : "ERROR";
 
-                // alert('afterRedirect ' + baseUrl + '&order_id=' + data.orderId + '&result=' + result);
+                //alert('afterRedirect ' + baseUrl + '&order_id=' + data.orderId + '&result=' + result);
                 window.location.href = baseUrl + '&order_id=' + data.orderId + '&result=' + result;
 
             } else {
@@ -56,7 +56,7 @@
                 sessionVersion = data.sessionVersion;
                 merchantId = data.merchantId;
 
-                // alert('afterRedirect ' + baseUrl + '&order_id=' + data.orderId + '&result=' + data.successIndicator + '&session_id=' + data.sessionId);
+                //alert('afterRedirect ' + baseUrl + '&order_id=' + data.orderId + '&result=' + data.successIndicator + '&session_id=' + data.sessionId);
                 window.location.href = baseUrl + '&order_id=' + data.orderId + '&result=' + data.successIndicator + '&session_id=' + data.sessionId;
             }
         }

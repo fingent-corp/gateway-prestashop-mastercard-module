@@ -1,12 +1,12 @@
 <?php
 /**
- * Copyright (c) 2019-2023 Mastercard
+ * Copyright (c) 2019-2026 Mastercard
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,20 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
+ * @package  Mastercard
+ * @version  GIT: @1.4.5@
+ * @link     https://github.com/fingent-corp/gateway-prestashop-mastercard-module
  */
-
-require_once(dirname(__FILE__) . '/../../vendor/autoload.php');
-require_once(dirname(__FILE__) . '/../../gateway.php');
-require_once(dirname(__FILE__) . '/../../handlers.php');
 
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
+use Symfony\Component\HttpFoundation\Request;
+use Fingent\Mastercard\Gateway\GatewayService;
+use Fingent\Mastercard\Handlers\RiskResponseHandler;
+use Fingent\Mastercard\Handlers\CaptureResponseHandler;
+use Fingent\Mastercard\Handlers\TransactionStatusResponseHandler;
+use Fingent\Mastercard\Handlers\RefundResponseHandler;
+use Fingent\Mastercard\Handlers\ResponseProcessor;
+use Fingent\Mastercard\Handlers\VoidResponseHandler;
+use Fingent\Mastercard\Handlers\AuthorizationResponseHandler;
 
 class MastercardWebhookModuleFrontController extends ModuleFrontController
 {
-    const HEADER_WEBHOOK_SECRET = 'X-Notification-Secret';
-    const HEADER_WEBHOOK_ID = 'X-Notification-Id';
+    const HEADER_WEBHOOK_SECRET  = 'X-Notification-Secret';
+    const HEADER_WEBHOOK_ID      = 'X-Notification-Id';
     const HEADER_WEBHOOK_ATTEMPT = 'X-Notification-Attempt';
+    const INVALID_PARAMETER      = 'Invalid Parameter';
 
     /**
      * @var GatewayService
@@ -43,6 +52,16 @@ class MastercardWebhookModuleFrontController extends ModuleFrontController
      * @var Logger
      */
     protected $logger;
+
+    protected function getRequestMethod(): string
+    {
+        return Request::createFromGlobals()->getMethod();
+    }
+
+    protected function getServerEnvironment(): array
+    {
+        return Request::createFromGlobals()->server->all();
+    }
 
     /**
      * @inheritdoc
@@ -60,7 +79,7 @@ class MastercardWebhookModuleFrontController extends ModuleFrontController
             $this->maintenance = true;
         }
 
-        if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+        if ($this->getRequestMethod() !== 'POST') {
             $this->emitServerError('Only POST is allowed');
         }
 
@@ -76,7 +95,7 @@ class MastercardWebhookModuleFrontController extends ModuleFrontController
         $webhookSecret = $this->module->getConfigValue('mpgs_webhook_secret');
         if (!$webhookSecret || $webhookSecret !== $headers[self::HEADER_WEBHOOK_SECRET]) {
             $this->logger->critical('Invalid or missing webhook secret', array(
-                'environment' => $_SERVER
+                'environment' => $this->getServerEnvironment()
             ));
             $this->emitServerError('Secret Mismatch');
         }
@@ -92,7 +111,6 @@ class MastercardWebhookModuleFrontController extends ModuleFrontController
     {
         header('HTTP/1.1 500 ' . $reason);
         header('Retry-After: 3600');
-        exit;
     }
 
     /**
@@ -134,7 +152,7 @@ class MastercardWebhookModuleFrontController extends ModuleFrontController
         $content = Tools::file_get_contents('php://input');
         $content = trim($content);
 
-        $contentParsed = @json_decode($content, true);
+        $contentParsed = json_decode($content, true);
 
         $jsonError = json_last_error();
         if ($jsonError !== JSON_ERROR_NONE) {
@@ -146,17 +164,17 @@ class MastercardWebhookModuleFrontController extends ModuleFrontController
 
         if ($this->module->getConfigValue('mpgs_merchant_id') !== $contentParsed['merchant']) {
             $this->logger->critical('Webhook merchant ID does not match the merchant ID configured', array($contentParsed));
-            $this->emitServerError('Invalid Parameter');
+            $this->emitServerError(self::INVALID_PARAMETER);
         }
 
         if (!isset($contentParsed['order']) || !isset($contentParsed['order']['id'])) {
             $this->logger->critical('Invalid parameter order.id', array($contentParsed));
-            $this->emitServerError('Invalid Parameter');
+            $this->emitServerError(self::INVALID_PARAMETER);
         }
 
         if (!isset($contentParsed['transaction']) || !isset($contentParsed['transaction']['id'])) {
             $this->logger->critical('Invalid parameter transaction.id', array($contentParsed));
-            $this->emitServerError('Invalid Parameter');
+            $this->emitServerError(self::INVALID_PARAMETER);
         }
 
         $this->logger->info('Webhook received', $this->getLoggerContext($contentParsed));
@@ -175,7 +193,7 @@ class MastercardWebhookModuleFrontController extends ModuleFrontController
 
         if (!$this->client->isApproved($response)) {
             $this->logger->warning(sprintf('Unexpected gateway code "%s"', $response['response']['gatewayCode']), $this->getLoggerContext($response));
-            exit;
+            return;
         }
 
         $mpgsOrderId = $response['order']['id'];
@@ -218,7 +236,6 @@ class MastercardWebhookModuleFrontController extends ModuleFrontController
         parent::postProcess();
 
         $this->logger->info('Webhook completed (200 OK)');
-        exit;
     }
 
     /**

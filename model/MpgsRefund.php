@@ -1,22 +1,29 @@
 <?php
 /**
- * Copyright (c) 2019-2023 Mastercard
+ * Copyright (c) 2019-2026 Mastercard
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * @package  Mastercard
+ * @version  GIT: @1.4.5@
+ * @link     https://github.com/fingent-corp/gateway-prestashop-mastercard-module
  */
+namespace Fingent\Mastercard\Model;
 
-class MpgsRefund extends ObjectModel
+class MpgsRefund extends \ObjectModel
 {
+    const ORDERID = 'order_id = ';
+
     public $refund_id;
     public $order_id;
     public $order_slip_id;
@@ -27,14 +34,14 @@ class MpgsRefund extends ObjectModel
      * @see ObjectModel::$definition
      */
     public static $definition = array(
-        'table' => 'mpgs_payment_refunds',
-        'primary' => 'refund_id',
-        'multilang' => false,
+        'table'          => 'mpgs_payment_refunds',
+        'primary'        => 'refund_id',
+        'multilang'      => false,
         'multilang_shop' => false,
-        'fields' => array(
-            'order_id' => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedInt'),
-            'order_slip_id' => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedInt'),
-            'total' => array('type' => self::TYPE_FLOAT),
+        'fields'         => array(
+            'order_id'       => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedInt'),
+            'order_slip_id'  => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedInt'),
+            'total'          => array('type' => self::TYPE_FLOAT),
             'transaction_id' => array('type' => self::TYPE_STRING, 'size' => 255),
         ),
     );
@@ -45,14 +52,14 @@ class MpgsRefund extends ObjectModel
      */
     public static function hasExistingRefunds($orderId)
     {
-        $sql = new DbQuery();
-        $sql->from(self::$definition['table']);
+        $sql = new \DbQuery();
+        $sql->from(static::$definition['table']);
         $sql->select('COUNT(*)');
-        $sql->where('order_id = ' . pSQL($orderId));
+        $sql->where(self::ORDERID . pSQL($orderId));
 
-        $res = Db::getInstance()->getValue($sql);
+        $res = \Db::getInstance()->getValue($sql);
 
-        return !!$res;
+        return (bool) $res;
     }
 
     /**
@@ -61,14 +68,14 @@ class MpgsRefund extends ObjectModel
      */
     public static function hasExistingFullRefund($orderId)
     {
-        $sql = new DbQuery();
-        $sql->from(self::$definition['table']);
+        $sql = new \DbQuery();
+        $sql->from(static::$definition['table']);
         $sql->select('COUNT(*)');
-        $sql->where('order_id = ' . pSQL($orderId) . ' AND ' . 'order_slip_id=0');
+        $sql->where(self::ORDERID . pSQL($orderId) . ' AND order_slip_id=0');
 
-        $res = Db::getInstance()->getValue($sql);
+        $res = \Db::getInstance()->getValue($sql);
 
-        return !!$res;
+        return (bool) $res;
     }
 
     /**
@@ -77,17 +84,17 @@ class MpgsRefund extends ObjectModel
      */
     public static function getAllRefundsByOrderId($orderId)
     {
-        $sql = new DbQuery();
-        $sql->from(self::$definition['table']);
+        $sql = new \DbQuery();
+        $sql->from(static::$definition['table']);
         $sql->select('*');
-        $sql->where('order_id = ' . pSQL($orderId));
+        $sql->where(self::ORDERID . pSQL($orderId));
 
-        $res = Db::getInstance()->query($sql);
+        $res = \Db::getInstance()->query($sql);
 
         if (!$res) {
             return [];
         }
 
-        return self::hydrateCollection(self::class, $res->fetchAll());
+        return static::hydrateCollection(self::class, $res->fetchAll());
     }
 }

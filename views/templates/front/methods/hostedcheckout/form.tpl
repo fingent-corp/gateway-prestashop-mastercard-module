@@ -19,7 +19,8 @@
 
         if(method == 'EMBEDDED'){
 
-           Checkout.showEmbeddedPage('#embed-target');
+           Checkout.showEmbeddedPage('#embed-target', () => {
+            });
         }
         else{
 
@@ -46,8 +47,19 @@
     }
 
     function completeCallback(resultIndicator, sessionVersion) {
-        window.location.href = '{$hostedcheckout_action_url nofilter}' + '?order_id={$mpgs_config.order_id}' + '&result=' + resultIndicator + '&sessionVersion=' + sessionVersion;
+
+        // Handle Embedded mode (object argument)
+        if (typeof resultIndicator === 'object' && resultIndicator !== null) {
+            sessionVersion = resultIndicator.sessionVersion;
+            resultIndicator = resultIndicator.resultIndicator;
+        }
+
+        window.location.href = '{$hostedcheckout_action_url nofilter}' +
+            '?order_id={$mpgs_config.order_id}' +
+            '&result=' + encodeURIComponent(resultIndicator) +
+            '&sessionVersion=' + encodeURIComponent(sessionVersion || '');
     }
+
 
     function errorCallback(error) {
         $('#payment-confirmation button').prop('disabled', false);

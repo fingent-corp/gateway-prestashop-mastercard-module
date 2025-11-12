@@ -1,12 +1,12 @@
 <?php
 /**
- * Copyright (c) 2019-2023 Mastercard
+ * Copyright (c) 2019-2026 Mastercard
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,9 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
+ * @package  Mastercard
+ * @version  GIT: @1.4.5@
+ * @link     https://github.com/fingent-corp/gateway-prestashop-mastercard-module
  */
 
+// Intentionally global and required by PrestaShop's translation system.
 global $_MODULE;
+
 $_MODULE = array();
 $_MODULE['<{mastercard}prestashop>handlers_56f9e315addcd47f076d49b6721fb9f7'] = 'Pago marcado como fraudulento, accion bloqueada';
 $_MODULE['<{mastercard}prestashop>handlers_5ec9f9a5ff1dbf1dfd16398240aefcbc'] = 'Decision de riesgo necesaria, accion bloqueada';

@@ -1,27 +1,38 @@
 <?php
 /**
- * Copyright (c) 2019-2023 Mastercard
+ * Copyright (c) 2019-2026 Mastercard
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * @package  Mastercard
+ * @version  GIT: @1.4.5@
+ * @link     https://github.com/fingent-corp/gateway-prestashop-mastercard-module
  */
 
-require_once(dirname(__FILE__).'/../../vendor/autoload.php');
-require_once(dirname(__FILE__).'/../../gateway.php');
-require_once(dirname(__FILE__).'/../../handlers.php');
-require_once(dirname(__FILE__).'/../../service/MpgsRefundService.php');
+use Fingent\Mastercard\Gateway\GatewayService;
+use Fingent\Mastercard\Handlers\ResponseProcessor;
+use Fingent\Mastercard\Handlers\CaptureResponseHandler;
+use Fingent\Mastercard\Handlers\TransactionStatusResponseHandler;
+use Fingent\Mastercard\Handlers\TransactionResponseHandler;
+use Fingent\Mastercard\Handlers\VoidResponseHandler;
+use Fingent\Mastercard\Handlers\RefundResponseHandler;
+use Fingent\Mastercard\Handlers\MasterCardPaymentException;
+use Fingent\Mastercard\Service\MpgsRefundService;
 
-class AdminMpgsController extends ModuleAdminController
+class AdminMpgsController extends \ModuleAdminController
 {
+    const AUTHORIZE_NOT_FOUND = 'Authorization transaction not found.';
+
     /**
      * @var GatewayService
      */
@@ -38,7 +49,7 @@ class AdminMpgsController extends ModuleAdminController
      */
     public function postProcess()
     {
-        $action = Tools::getValue('action');
+        $action     = Tools::getValue('action');
         $actionName = $action.'Action';
 
         $this->client = new GatewayService(
@@ -50,7 +61,7 @@ class AdminMpgsController extends ModuleAdminController
         );
 
         $orderId = Tools::getValue('id_order');
-        $order = new Order($orderId);
+        $order   = new Order($orderId);
 
         try {
             $this->{$actionName}($order);
@@ -65,22 +76,6 @@ class AdminMpgsController extends ModuleAdminController
 
     /**
      * @param Order $order
-     */
-    protected function acceptAction($order)
-    {
-        // @todo
-    }
-
-    /**
-     * @param Order $order
-     */
-    protected function rejectAction($order)
-    {
-        // @todo
-    }
-
-    /**
-     * @param Order $order
      *
      * @throws MasterCardPaymentException
      * @throws \Http\Client\Exception
@@ -89,12 +84,12 @@ class AdminMpgsController extends ModuleAdminController
     protected function voidAction($order)
     {
         $txnData = $this->client->getAuthorizationTransaction($this->module->getOrderRef($order));
-        $txn = $this->module->getTransactionById($order, $txnData['transaction']['id']);
+        $txn     = $this->module->getTransactionById($order, $txnData['transaction']['id']);
         if (!$txn) {
-            throw new Exception('Authorization transaction not found.');
+            throw new MasterCardPaymentException(self::AUTHORIZE_NOT_FOUND);
         }
 
-        $response = $this->client->voidTxn($this->module->getOrderRef($order), $txn->transaction_id);
+        $response  = $this->client->voidTxn($this->module->getOrderRef($order), $txn->transaction_id);
 
         $processor = new ResponseProcessor($this->module);
         $processor->handle($order, $response, array(
@@ -114,10 +109,10 @@ class AdminMpgsController extends ModuleAdminController
     protected function captureAction($order)
     {
         $txnData = $this->client->getAuthorizationTransaction($this->module->getOrderRef($order));
-        $txn = $this->module->getTransactionById($order, $txnData['transaction']['id']);
+        $txn     = $this->module->getTransactionById($order, $txnData['transaction']['id']);
 
         if (!$txn) {
-            throw new Exception('Authorization transaction not found.');
+            throw new MasterCardPaymentException(self::AUTHORIZE_NOT_FOUND);
         }
 
         $currency = Currency::getCurrency($txn->id_currency);

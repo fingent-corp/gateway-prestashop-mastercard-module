@@ -1,5 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## [1.4.5] - 2025-11-12
+### Added
+- Users will have the capability to make payments utilizing the PayPal option within the Hosted checkout. Please ensure that the MID has PayPal enabled for this payment option to appear on the checkout page.
+- Users will have the capability to make payments utilizing the KNET option within the Hosted checkout. Please ensure that the MID has KNET enabled for this payment option to appear on the checkout page.
+- Minor changes in the plugin configuration.
+- Introduced a new ‘Merchant Information’ section in the plugin settings, allowing admins to update the merchant details to be displayed on the Redirected Payment Page easily.
+- Compatible with PHP 8.1 & PrestaShop 8.2.x (tested with v8.2.0).
+
+
 
 ## [1.4.4] - 2025-02-13
 ### Added

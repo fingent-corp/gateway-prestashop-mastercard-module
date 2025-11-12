@@ -1,12 +1,12 @@
 <?php
 /**
- * Copyright (c) 2019-2023 Mastercard
+ * Copyright (c) 2019-2026 Mastercard
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,11 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
+ * @package  Mastercard
+ * @version  GIT: @1.4.5@
+ * @link     https://github.com/fingent-corp/gateway-prestashop-mastercard-module
  */
 
-require_once(dirname(__FILE__).'/../vendor/autoload.php');
-require_once(dirname(__FILE__).'/../gateway.php');
-require_once(dirname(__FILE__).'/../handlers.php');
+namespace Fingent\Mastercard\Service;
+
+use Fingent\Mastercard\Gateway\GatewayService;
+use Fingent\Mastercard\Handlers\ResponseProcessor;
+use Fingent\Mastercard\Handlers\MasterCardPaymentException;
 
 class MpgsRefundService
 {
@@ -37,7 +42,7 @@ class MpgsRefundService
      *
      * @param Mastercard $module
      */
-    public function __construct(Mastercard $module)
+    public function __construct(\Mastercard $module)
     {
         $this->client = new GatewayService(
             $module->getApiEndpoint(),
@@ -60,14 +65,13 @@ class MpgsRefundService
     public function execute($order, array $handlers = [], $amount = 0)
     {
         $txnData = $this->client->getCaptureTransaction($this->module->getOrderRef($order));
-        $txn = $this->module->getTransactionById($order, $txnData['transaction']['id']);
+        $txn     = $this->module->getTransactionById($order, $txnData['transaction']['id']);
 
         if (!$txn) {
-            throw new Exception('Capture/Pay transaction not found.');
+            throw new MasterCardPaymentException('Capture/Pay transaction not found.');
         }
 
-        $currency = Currency::getCurrency($txn->id_currency);
-
+        $currency = \Currency::getCurrency($txn->id_currency);
         $response = $this->client->refund(
             $this->module->getOrderRef($order),
             $amount ? $amount : $txn->amount,
