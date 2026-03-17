@@ -1,5 +1,5 @@
 <div id="embed-target"> </div>
-<form id="payment-form" method="POST" onsubmit="return payWithHostedCheckout()" action="{$hostedcheckout_action_url}"></form>
+<form id="payment-form" method="POST" onsubmit="return payWithHostedCheckout()" action="{$hostedcheckout_action_url|escape:'html':'UTF-8'}"></form>
 <script async src="{$hostedcheckout_component_url nofilter}"
         data-error="errorCallback"
         data-complete="completeCallback"
@@ -15,7 +15,7 @@
             }
         });
         
-        var method = ('{$mpgs_config.method}');
+        var method = ('{$mpgs_config.method|escape:'javascript':'UTF-8'}');
 
         if(method == 'EMBEDDED'){
 
@@ -33,7 +33,7 @@
 
         var xhr = $.ajax({
             method: 'GET',
-            url: '{$hostedcheckout_action_url nofilter}',
+            url: '{$hostedcheckout_action_url|escape:'javascript':'UTF-8'}',
             dataType: 'json'
         });
 
@@ -54,8 +54,8 @@
             resultIndicator = resultIndicator.resultIndicator;
         }
 
-        window.location.href = '{$hostedcheckout_action_url nofilter}' +
-            '?order_id={$mpgs_config.order_id}' +
+        window.location.href = '{$hostedcheckout_action_url|escape:'javascript':'UTF-8'}' +
+            '?order_id={$mpgs_config.order_id|escape:'javascript':'UTF-8'}' +
             '&result=' + encodeURIComponent(resultIndicator) +
             '&sessionVersion=' + encodeURIComponent(sessionVersion || '');
     }
@@ -67,7 +67,7 @@
     }
 
     function cancelCallback() {
-        window.location.href = '{$hostedcheckout_cancel_url nofilter}';
+        window.location.href = '{$hostedcheckout_cancel_url|escape:'javascript':'UTF-8'}';
     }
     
 </script>

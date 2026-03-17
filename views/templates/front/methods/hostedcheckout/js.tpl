@@ -19,13 +19,13 @@
             data-complete="completeCallback">
     </script>
     <script>
-        var merchantId = "{$mpgs_config.merchant_id|escape:javascript}";
-        var sessionId = "{$mpgs_config.session_id|escape:javascript}";
-        var sessionVersion = "{$mpgs_config.session_version|escape:javascript}";
-        var successIndicator = "{$mpgs_config.success_indicator|escape:javascript}";
-        var orderId = "{$mpgs_config.order_id|escape:javascript}";
+        var merchantId = "{$mpgs_config.merchant_id|escape:'javascript':'UTF-8'}";
+        var sessionId = "{$mpgs_config.session_id|escape:'javascript':'UTF-8'}";
+        var sessionVersion = "{$mpgs_config.session_version|escape:'javascript':'UTF-8'}";
+        var successIndicator = "{$mpgs_config.success_indicator|escape:'javascript':'UTF-8'}";
+        var orderId = "{$mpgs_config.order_id|escape:'javascript':'UTF-8'}";
         var resultIndicator = null;
-        var baseUrl = "{$urls.current_url nofilter}";
+        var baseUrl = "{$urls.current_url|escape:'javascript':'UTF-8'}";
 
         // This method preserves the current state of successIndicator and orderId,
         // so they're not overwritten when we return to this page after redirect

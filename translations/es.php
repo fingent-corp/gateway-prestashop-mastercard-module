@@ -15,12 +15,17 @@
  * limitations under the License.
  *
  * @package  Mastercard
- * @version  GIT: @1.4.5@
+ * @version  GIT: @1.4.6@
  * @link     https://github.com/fingent-corp/gateway-prestashop-mastercard-module
  */
 
 // Intentionally global and required by PrestaShop's translation system.
 global $_MODULE;
+use Fingent\Mastercard\Handlers\MasterCardPaymentException;
+
+if (!defined('_PS_VERSION_')) {
+    throw new MasterCardPaymentException('Direct access not allowed.');
+}
 
 $_MODULE = array();
 $_MODULE['<{mastercard}prestashop>handlers_56f9e315addcd47f076d49b6721fb9f7'] = 'Pago marcado como fraudulento, accion bloqueada';

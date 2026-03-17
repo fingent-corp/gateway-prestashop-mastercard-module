@@ -15,7 +15,7 @@
  * limitations under the License.
  *
  * @package  Mastercard
- * @version  GIT: @1.4.5@
+ * @version  GIT: @1.4.6@
  * @link     https://github.com/fingent-corp/gateway-prestashop-mastercard-module
  */
 
@@ -47,6 +47,10 @@ use Fingent\Mastercard\Api\ApiErrorPlugin;
 use Fingent\Mastercard\Api\ApiLoggerPlugin;
 use Fingent\Mastercard\Handlers\MasterCardPaymentException;
 
+if (!defined('_PS_VERSION_')) {
+    throw new MasterCardPaymentException('Direct access not allowed.');
+}
+
 class GatewayService
 {
     const INVALID_RESULT = 'Missing or invalid session result.';
@@ -57,6 +61,8 @@ class GatewayService
     const ERROR          = 'Error:';
     const RESPONSE       = 'Response:';
     const UNKNOWN_ERROR  = 'Unknown error occurred.';
+    const UNIQID_OFFSET  = 7;
+    const UNIQID_LENGTH  = 6;
 
     /**
      * @var MessageFactoryInterface
@@ -243,18 +249,6 @@ class GatewayService
 
     /**
      * @param array $data
-     *
-     * @throws GatewayResponseException
-     */
-    public function validateHostedSessionUpdateResponse($data)
-    {
-        if (!isset($data['session']) || $data['session']['updateStatus'] !== 'SUCCESS') {
-            throw new GatewayResponseException('Failed to update Hosted Session.');
-        }
-    }
-
-    /**
-     * @param array $data
      */
     public function validateTxnResponse($data)
     {
@@ -346,116 +340,6 @@ class GatewayService
     }
 
     /**
-     * Interprets the authentication response returned from the card Issuer's Access Control Server (ACS)
-     * after the cardholder completes the authentication process. The response indicates the success
-     * or otherwise of the authentication.
-     * The 3DS AuthId is required so that merchants can submit payloads multiple times
-     * without producing duplicates in the database.
-     * POST https://mtf.gateway.mastercard.com/api/rest/version/58/merchant/{merchantId}/3DSecureId/{3DSecureId}
-     *
-     * @param string $threeDSecureId
-     * @param string $paRes
-     *
-     * @return mixed|ResponseInterface
-     * @throws Exception
-     */
-    public function process3dsResult($threeDSecureId, $paRes)
-    {
-        $uri = $this->apiUrl.'3DSecureId/'.$threeDSecureId;
-        $request   = $this->messageFactory->createRequest('POST', $uri);
-        $stream    = $this->messageFactory->createStream(
-                        wp_json_encode(
-                            array(
-                                'apiOperation' => 'PROCESS_ACS_RESULT',
-                                '3DSecure'     => array('paRes' => $paRes),
-                            )
-                        )
-                    );
-        $requestBody = $request->withBody( $stream );
-        $response    = $this->client->sendRequest($requestBody);
-        $response    = json_decode($response->getBody(), true);
-
-        return $response;
-    }
-
-    /**
-     * Request to check a cardholder's enrollment in the 3DSecure scheme.
-     * PUT https://mtf.gateway.mastercard.com/api/rest/version/58/merchant/{merchantId}/3DSecureId/{3DSecureId}
-     *
-     * @param array $data
-     * @param array $order
-     * @param array $session
-     *
-     * @return mixed|ResponseInterface
-     * @throws Exception
-     */
-    public function check3dsEnrollment($data, $order, $session)
-    {
-        $threeDSecureId = uniqid('3DS-', true);
-        $uri            = $this->apiUrl.'3DSecureId/'.$threeDSecureId;
-
-        $request    = $this->messageFactory->createRequest('PUT', $uri );
-        $stream     = $this->messageFactory->createStream(
-                        wp_json_encode(
-                            array(
-                                'apiOperation'  => 'CHECK_3DS_ENROLLMENT',
-                                '3DSecure'     => $data,
-                                'order'        => $order,
-                                'session'      => $session,
-                            )
-                        )
-                    );
-        $requestBody = $request->withBody( $stream );
-        $response    = $this->client->sendRequest($requestBody);
-        $response    = json_decode($response->getBody(), true);
-
-        return $response;
-    }
-
-    /**
-     * Create initiate authentication
-     *
-     * @see https://test-gateway.mastercard.com/api/documentation/apiDocumentation/rest-json/version/latest/operation/Authentication%3a%20%20Initiate%20Authentication.html?locale=en_US
-     *
-     * @param string $orderId
-     * @param array $session
-     * @param array $order
-     */
-    public function initiateAuthentication(
-        $orderId,
-        $session,
-        $order
-    ) {
-        $txnId = uniqid($orderId.'-', true);
-        $uri   = $this->apiUrl.self::ORDER.$orderId.self::TRANSACTION.$txnId;
-
-        $request   = $this->messageFactory->createRequest('PUT', $uri);
-        $stream    = $this->messageFactory->createStream(
-                         json_encode(array(
-                            'apiOperation'   => 'INITIATE_AUTHENTICATION',
-                            'authentication' => [
-                                'acceptVersions' => '3DS1,3DS2',
-                                'channel'        => 'PAYER_BROWSER',
-                                'purpose'        => 'PAYMENT_TRANSACTION',
-                            ],
-                            'session'        => $session,
-                            'order'          => array_merge($order, array(
-                                'reference' => $orderId,
-                            )),
-                            'transaction'    => array(
-                            'reference' => $txnId,
-                        ),
-        )));
-        $requestBody = $request->withBody( $stream );
-        $response    = $this->client->sendRequest($requestBody);
-        $response    = json_decode($response->getBody(), true);
-
-        $this->validateInitiateAuthenticationResponse($response);
-
-        return $response;
-    }
-
-    /**
      * Authenticate Payer
      *
      * @see https://test-gateway.mastercard.com/api/documentation/apiDocumentation/rest-json/version/latest/operation/Authentication%3a%20%20Initiate%20Authentication.html?locale=en_US
@@ -500,52 +384,6 @@ class GatewayService
         $response    = json_decode($response->getBody(), true);
 
         $this->validateAuthenticatePayerResponse($response);
-
-        return $response;
-    }
-
-    /**
-     * @param string $orderId
-     * @param string $sessionId
-     * @param array $order
-     * @param array $authentication
-     * @param array $transaction
-     *
-     * @return mixed
-     * @throws Exception
-     * @throws GatewayResponseException
-     */
-    public function updateSession(
-        string $orderId,
-        string $sessionId,
-        $order,
-        $authentication = array(),
-        $transaction    = array()
-    ) {
-        $uri = $this->apiUrl.'session/'.$sessionId;
-
-        $requestData = array(
-            'partnerSolutionId' => $this->getSolutionId(),
-            'order'             => array_merge($order, array(
-                'id' => $orderId,
-            )),
-        );
-
-        if (!empty($transaction)) {
-            $requestData['transaction'] = $transaction;
-        }
-
-        if (!empty($authentication)) {
-            $requestData['authentication'] = $authentication;
-        }
-
-        $request     = $this->messageFactory->createRequest('PUT', $uri);
-        $stream      = $this->messageFactory->createStream( json_encode($requestData));
-        $requestBody = $request->withBody( $stream );
-        $response    = $this->client->sendRequest($requestBody);
-        $response    = json_decode($response->getBody(), true);
-
-        $this->validateHostedSessionUpdateResponse($response);
 
         return $response;
     }
@@ -1006,7 +844,7 @@ class GatewayService
      */
     private function getUniqueTransactionId($orderReference)
     {
-        $uniqId = substr(uniqid(), 7, 6);
+        $uniqId = substr(uniqid(), self::UNIQID_OFFSET, self::UNIQID_LENGTH);
 
         return sprintf('%s-%s', $orderReference, $uniqId);
     }

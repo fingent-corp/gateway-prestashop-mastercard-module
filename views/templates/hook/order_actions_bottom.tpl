@@ -5,7 +5,7 @@
     </div>
     <div class="card-body">
         <div>
-            <h4>Gateway Order ID: {$mpgs_order_ref}</h4>
+            <h4>Gateway Order ID: {$mpgs_order_ref|escape:'html':'UTF-8'}</h4>
             {if $can_review}
                 <p>{l s='This order has been marked to require payment review. Please review the order at the Payment Gateway Administration.' mod='mastercard'}</p>
             {/if}
@@ -81,18 +81,20 @@
             <tbody>
             {foreach $refunds AS $refund}
             <tr>
-                <td>{$refund->refund_id}</td>
+                <td>{$refund->refund_id|intval}</td>
                 <td>
                     {if $refund->order_slip_id}
-                        <a class="_blank" title="{l s='See the document'}" href="{$link->getAdminLink('AdminPdf', true, [], ['submitAction' => 'generateOrderSlipPDF', 'id_order_slip' => $refund->order_slip_id])|escape:'html':'UTF-8'}">
-                            {Configuration::get('PS_CREDIT_SLIP_PREFIX')}{'%06d'|sprintf:$refund->order_slip_id}
+                        <a class="_blank"
+                        title="{l s='See the document'}"
+                        href="{$link->getAdminLink('AdminPdf', true, [], ['submitAction' => 'generateOrderSlipPDF', 'id_order_slip' => $refund->order_slip_id|intval])|escape:'html':'UTF-8'}">
+                            {Configuration::get('PS_CREDIT_SLIP_PREFIX')|escape:'html':'UTF-8'}{'%06d'|sprintf:$refund->order_slip_id|intval}
                         </a>
                     {else}
                         {l s='Full refund'}
                     {/if}
                 </td>
                 <td>{displayPrice price=$refund->total currency=$order->id_currency}</td>
-                <td>{$refund->transaction_id}</td>
+                <td>{$refund->transaction_id|escape:'html':'UTF-8'}</td>
             </tr>
             {/foreach}
             </tbody>
@@ -120,9 +122,9 @@
       <tbody>
       {foreach $voids AS $void}
         <tr>
-          <td>{$void->void_id}</td>
+          <td>{$void->void_id|intval}</td>
           <td>{displayPrice price=$void->total currency=$void->id_currency}</td>
-          <td>{$void->transaction_id}</td>
+          <td>{$void->transaction_id|escape:'html':'UTF-8'}</td>
         </tr>
       {/foreach}
       </tbody>
@@ -132,7 +134,7 @@
 {/if}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        var hidePartialRefundButton = {$hidePartialRefundButton|json_encode};
+        var hidePartialRefundButton = {$hidePartialRefundButton|json_encode nofilter};
         if (hidePartialRefundButton) {
             var partialRefundButtons = document.getElementsByClassName('partial-refund-display');
             if (partialRefundButtons.length > 0) {
