@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2019-2023 Mastercard
+ * Copyright (c) 2019-2026 Mastercard
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
+ * @package  Mastercard
+ * @version  GIT: @1.4.6@
+ * @link     https://github.com/fingent-corp/gateway-prestashop-mastercard-module
  */
+
+if (!defined('_PS_VERSION_')) {
+    throw new MasterCardPaymentException('Direct access not allowed.');
+}
 
 abstract class MastercardAbstractModuleFrontController extends ModuleFrontController
 {
     const PAYMENT_DECLINED_ERROR = 'Your payment was declined.';
+    const PARAM_3DSECURE_ID = '3DSecureId';
+    const PARAM_PROCESS_ACS = 'process_acs_result';
+    const PARAM_CHECK_3DS  = 'check_3ds_enrollment';
+    const KEY_3DSECURE = '3DSecure';
 
     /**
      * @var GatewayService
@@ -64,8 +75,8 @@ abstract class MastercardAbstractModuleFrontController extends ModuleFrontContro
         $this->client = new GatewayService(
             $this->module->getApiEndpoint(),
             $this->module->getApiVersion(),
-            $this->module->getConfigValue('mpgs_merchant_id'),
-            $this->module->getConfigValue('mpgs_api_password'),
+            $this->module->getConfigValue('mg_merchant_id'),
+            $this->module->getConfigValue('mg_api_password'),
             $this->module->getWebhookUrl()
         );
     }
@@ -79,182 +90,187 @@ abstract class MastercardAbstractModuleFrontController extends ModuleFrontContro
      * @throws \Http\Client\Exception
      * @throws Exception
      */
-    public function postProcess()
+    public function isPostProcess()
     {
         parent::postProcess();
 
-        if (Tools::getValue('process_acs_result') === "1") {
-            $paRes = Tools::getValue('PaRes');
-            $this->threeDSecureId = Tools::getValue('3DSecureId');
+        return $this->handle3dsFlow();
+    }
 
-            if (!$paRes || !$this->threeDSecureId) {
-                $this->errors[] = $this->module->l('Payment error occurred (3D Secure).', 'abstract');
-                $this->redirectWithNotifications(
-                    Context::getContext()->link->getPageLink(
-                        'order',
-                        true,
-                        null,
-                        array(
-                            'action' => 'show',
-                        )
-                    )
-                );
-                exit;
-            }
+    private function handle3dsFlow()
+    {
+        $result = false;
 
-            $response = $this->client->process3dsResult($this->threeDSecureId, $paRes);
-
-            if ($response['response']['gatewayRecommendation'] !== 'PROCEED') {
-                $this->errors[] = $this->module->l('Your payment was declined by 3D Secure.', 'abstract');
-                $this->redirectWithNotifications(
-                    Context::getContext()->link->getPageLink(
-                        'order',
-                        true,
-                        null,
-                        array(
-                            'action' => 'show',
-                        ),
-                        true
-                    )
-                );
-                exit;
-            }
-
-            $this->threeDSecureData = array(
-                'acsEci'              => $response['3DSecure']['acsEci'],
-                'authenticationToken' => $response['3DSecure']['authenticationToken'],
-                'paResStatus'         => $response['3DSecure']['paResStatus'],
-                'veResEnrolled'       => $response['3DSecure']['veResEnrolled'],
-                'xid'                 => $response['3DSecure']['xid'],
-            );
-
-            return false;
+        if ($this->isProcessingAcsResult()) {
+            $result = $this->handleAcsResult();
+        } elseif ($this->isUpdating3dsSession()) {
+            $result = $this->handle3dsSessionUpdate();
+        } elseif ($this->isChecking3dsEnrollment()) {
+            $result = $this->handle3dsEnrollment();
+        } else{
+            $result = false;
         }
 
-        if (Tools::getValue('check_3ds_enrollment') === '2') {
-            if (Tools::getValue('action_type') === 'update_session') {
-                $currency = Context::getContext()->currency;
-                $order = array(
-                    'currency' => $currency->iso_code,
-                    'amount'   => Context::getContext()->cart->getOrderTotal(),
-                );
+        return $result;
+    }
 
-                $orderId = Tools::getValue('order_id');
-                $sessionId = Tools::getValue('session_id');
+    private function isProcessingAcsResult(): bool
+    {
+        return Tools::getValue(self::PARAM_PROCESS_ACS) === '1';
+    }
 
-                $responseUrl = Context::getContext()->link->getModuleLink(
-                    'mastercard',
-                    'threedsresponse',
-                    array(
-                        'session_id'           => $sessionId,
-                        'action_type'          => 'completed',
-                        'check_3ds_enrollment' => '2',
-                    ),
-                    true
-                );
+    private function isUpdating3dsSession(): bool
+    {
+        return Tools::getValue(self::PARAM_CHECK_3DS) === '2'
+            && Tools::getValue('action_type') === 'update_session';
+    }
 
-                $auth = array(
-                    'channel'             => 'PAYER_BROWSER',
-                    'redirectResponseUrl' => $responseUrl,
-                );
+    private function isChecking3dsEnrollment(): bool
+    {
+        return Tools::getValue(self::PARAM_CHECK_3DS) === '1';
+    }
 
-                $transaction = array(
-                    'id' => uniqid(sprintf('3DS-%s-', $orderId))
-                );
+    private function handleAcsResult(): bool
+    {
+        $paRes = Tools::getValue('PaRes');
+        $threeDSecureId = Tools::getValue(self::PARAM_3DSECURE_ID);
 
-                $response = $this->client->updateSession(
-                    $orderId,
-                    $sessionId,
-                    $order,
-                    $auth,
-                    $transaction
-                );
-
-                $res = array(
-                    'session'     => $response['session'] ?? [],
-                    'order'       => $response['order'] ?? [],
-                    'transaction' => $response['transaction'] ?? [],
-                    'version'     => $response['version'] ?? [],
-                );
-
-                echo json_encode($res);
-                exit;
-            }
+        if (!$paRes || !$threeDSecureId) {
+            $this->addPaymentError();
+            return $this->redirectToOrder();
         }
 
-        if (Tools::getValue('check_3ds_enrollment') === "1") {
-            // reset order id
-            $this->module->getNewOrderRef();
-            $threeD = array(
-                'authenticationRedirect' => array(
-                    'pageGenerationMode' => 'CUSTOMIZED',
-                    'responseUrl'        => $this->context->link->getModuleLink(
-                        $this->module->name,
-                        Tools::getValue('controller'),
-                        array(),
-                        true
-                    ),
-                ),
+        $response = $this->client->process3dsResult($threeDSecureId, $paRes);
+
+        if ($response['response']['gatewayRecommendation'] !== 'PROCEED') {
+            $this->addPaymentError(
+                $this->module->l('Your payment was declined by 3D Secure.', 'abstract')
             );
-
-            $session = array(
-                'id' => Tools::getValue('session_id'),
-            );
-
-            $currency = Context::getContext()->currency;
-            $order = array(
-                'amount'   => Context::getContext()->cart->getOrderTotal(),
-                'currency' => $currency->iso_code,
-            );
-
-            $response = $this->client->check3dsEnrollment(
-                $threeD,
-                $order,
-                $session
-            );
-
-            if ($response['response']['gatewayRecommendation'] !== 'PROCEED') {
-                $this->errors[] = $this->module->l(self::PAYMENT_DECLINED_ERROR, 'abstract');
-                $this->redirectWithNotifications(
-                    Context::getContext()->link->getPageLink(
-                        'order',
-                        true,
-                        null,
-                        array(
-                            'action' => 'show',
-                        )
-                    )
-                );
-                exit;
-            }
-
-            if (isset($response['3DSecure']['authenticationRedirect'])) {
-                $tdsAuth = $response['3DSecure']['authenticationRedirect']['customized'];
-                $this->context->smarty->assign(
-                    array(
-                        'authenticationRedirect' => $tdsAuth,
-                        'returnUrl'              => $this->context->link->getModuleLink(
-                            $this->module->name,
-                            Tools::getValue('controller'),
-                            array(
-                                '3DSecureId'         => $response['3DSecureId'],
-                                'process_acs_result' => '1',
-                                'session_id'         => Tools::getValue('session_id'),
-                                'session_version'    => Tools::getValue('session_version'),
-                            ),
-                            true
-                        ),
-                    )
-                );
-
-                $this->setTemplate('module:mastercard/views/templates/front/threedsecure/form.tpl');
-
-                return true;
-            }
+            return $this->redirectToOrder();
         }
+
+        $this->threeDSecureData = [
+            'acsEci'              => $response[self::KEY_3DSECURE]['acsEci'],
+            'authenticationToken' => $response[self::KEY_3DSECURE]['authenticationToken'],
+            'paResStatus'         => $response[self::KEY_3DSECURE]['paResStatus'],
+            'veResEnrolled'       => $response[self::KEY_3DSECURE]['veResEnrolled'],
+            'xid'                 => $response[self::KEY_3DSECURE]['xid'],
+        ];
 
         return false;
     }
+
+    private function handle3dsSessionUpdate(): bool
+    {
+        $currency = $this->context->currency;
+
+        $order = [
+            'currency' => $currency->iso_code,
+            'amount'   => $this->context->cart->getOrderTotal(),
+        ];
+
+        $orderId   = Tools::getValue('order_id');
+        $sessionId = Tools::getValue('session_id');
+
+        $responseUrl = $this->context->link->getModuleLink(
+            'mastercard',
+            'threedsresponse',
+            [
+                'session_id'           => $sessionId,
+                'action_type'          => 'completed',
+                'check_3ds_enrollment' => '2',
+            ],
+            true
+        );
+
+        $response = $this->client->updateSession(
+            $orderId,
+            $sessionId,
+            $order,
+            [
+                'channel'             => 'PAYER_BROWSER',
+                'redirectResponseUrl' => $responseUrl,
+            ],
+            ['id' => uniqid(sprintf('3DS-%s-', $orderId))]
+        );
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'session'     => $response['session'] ?? [],
+            'order'       => $response['order'] ?? [],
+            'transaction' => $response['transaction'] ?? [],
+            'version'     => $response['version'] ?? [],
+        ]);
+
+        return true;
+    }
+
+    private function handle3dsEnrollment(): bool
+    {
+        $this->module->getNewOrderRef();
+
+        $response = $this->client->check3dsEnrollment(
+            [
+                'authenticationRedirect' => [
+                    'pageGenerationMode' => 'CUSTOMIZED',
+                    'responseUrl' => $this->context->link->getModuleLink(
+                        $this->module->name,
+                        Tools::getValue('controller'),
+                        [],
+                        true
+                    ),
+                ],
+            ],
+            [
+                'amount'   => $this->context->cart->getOrderTotal(),
+                'currency' => $this->context->currency->iso_code,
+            ],
+            ['id' => Tools::getValue('session_id')]
+        );
+
+        if ($response['response']['gatewayRecommendation'] !== 'PROCEED') {
+            $this->addPaymentError();
+            return $this->redirectToOrder();
+        }
+
+        if (!isset($response[self::KEY_3DSECURE]['authenticationRedirect'])) {
+            return false;
+        }
+
+        $this->context->smarty->assign([
+            'authenticationRedirect' =>
+                $response[self::KEY_3DSECURE]['authenticationRedirect']['customized'],
+            'returnUrl' => $this->context->link->getModuleLink(
+                $this->module->name,
+                Tools::getValue('controller'),
+                [
+                    self::PARAM_3DSECURE_ID => $response[self::PARAM_3DSECURE_ID],
+                    self::PARAM_PROCESS_ACS => '1',
+                    'session_id' => Tools::getValue('session_id'),
+                    'session_version' => Tools::getValue('session_version'),
+                ],
+                true
+            ),
+        ]);
+
+        $this->setTemplate('module:mastercard/views/templates/front/threedsecure/form.tpl');
+        return true;
+    }
+
+    private function redirectToOrder(): bool
+    {
+        $this->redirectWithNotifications(
+            $this->context->link->getPageLink('order', true, null, ['action' => 'show'])
+        );
+        return true;
+    }
+
+    private function addPaymentError(string $message = null): void
+    {
+        $this->errors[] = $message
+            ?: $this->module->l('Payment error occurred (3D Secure).', 'abstract');
+    }
+
 
     /**
      * @param AddressCore $address
@@ -297,7 +313,7 @@ abstract class MastercardAbstractModuleFrontController extends ModuleFrontContro
      */
     protected function getDeltaAmount()
     {
-        if (!Configuration::get('mpgs_lineitems_enabled')) {
+        if (!Configuration::get('mg_lineitems_enabled')) {
             return 0.00;
         }
 

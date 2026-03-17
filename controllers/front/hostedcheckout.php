@@ -15,7 +15,7 @@
  * limitations under the License.
  *
  * @package  Mastercard
- * @version  GIT: @1.4.5@
+ * @version  GIT: @1.4.6@
  * @link     https://github.com/fingent-corp/gateway-prestashop-mastercard-module
  */
 
@@ -25,6 +25,11 @@ use Fingent\Mastercard\Handlers\ResponseProcessor;
 use Fingent\Mastercard\Handlers\RiskResponseHandler;
 use Fingent\Mastercard\Handlers\OrderPaymentResponseHandler;
 use Fingent\Mastercard\Handlers\OrderStatusResponseHandler;
+use Fingent\Mastercard\Handlers\MasterCardPaymentException;
+
+if (!defined('_PS_VERSION_')) {
+    throw new MasterCardPaymentException('Direct access not allowed.');
+}
 
 class MastercardHostedCheckoutModuleFrontController extends MastercardAbstractModuleFrontController
 {
@@ -140,8 +145,10 @@ class MastercardHostedCheckoutModuleFrontController extends MastercardAbstractMo
             $merchantInteraction['merchant'] = $merchant;
         } else {
             $sitename = GatewayService::safe(Configuration::get('PS_SHOP_NAME'));
-            $merchantInteraction['merchant']['name'] = $sitename;
-            $merchantInteraction['merchant']['url']  = GatewayService::safe(Configuration::get('mpgs_api_url_custom'));
+            $merchantInteraction['merchant'] = [
+                'name' => $sitename,
+                'url'  => GatewayService::safe(Configuration::get('mpgs_api_url_custom')),
+            ];
         }
 
         return array_merge(
@@ -166,6 +173,12 @@ class MastercardHostedCheckoutModuleFrontController extends MastercardAbstractMo
      */
     protected function showPaymentPage()
     {
+        // Validate that action URLs are actually URLs
+        $hostedCheckoutUrl = Context::getContext()->link->getModuleLink('mastercard', 'hostedcheckout');
+        if (!$hostedCheckoutUrl || !filter_var($hostedCheckoutUrl, FILTER_VALIDATE_URL)) {
+            throw new MasterCardPaymentException('Invalid hosted checkout URL');
+        }
+
         $this->context->smarty->assign(array(
             'mpgs_config' => array(
                 'session_id'        => Tools::getValue('session_id'),
