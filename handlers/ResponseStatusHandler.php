@@ -15,7 +15,7 @@
  * limitations under the License.
  *
  * @package  Mastercard
- * @version  GIT: @1.4.5@
+ * @version  GIT: @1.4.6@
  * @link     https://github.com/fingent-corp/gateway-prestashop-mastercard-module
  */
 
@@ -25,6 +25,10 @@ use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Fingent\Mastercard\Handlers\MasterCardPaymentException;
 use Fingent\Mastercard\Handlers\ResponseHandler;
+
+if (!defined('_PS_VERSION_')) {
+    throw new MasterCardPaymentException('Direct access not allowed.');
+}
 
 class ResponseStatusHandler extends ResponseHandler
 {

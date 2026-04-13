@@ -1,5 +1,5 @@
-all:
-	composer install --no-ansi --no-dev --no-interaction --no-plugins --no-progress --no-scripts --no-suggest --optimize-autoloader &&\
+all :
+	composer install --no-ansi --no-dev --no-interaction --no-plugins --no-progress --no-scripts --optimize-autoloader &&\
 	git archive --prefix mastercard/ -o ./prestashop-mastercard.zip HEAD &&\
 	mkdir -p mastercard && mv ./vendor ./mastercard/ &&\
 	zip -rq ./prestashop-mastercard.zip ./mastercard &&\

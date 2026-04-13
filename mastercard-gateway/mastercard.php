@@ -15,7 +15,7 @@
  * limitations under the License.
  *
  * @package  Mastercard
- * @version  GIT: @1.4.5@
+ * @version  GIT: @1.4.6@
  * @link     https://github.com/fingent-corp/gateway-prestashop-mastercard-module
  */
 
@@ -80,14 +80,14 @@ class Mastercard extends PaymentModule
         $this->module_key = '5e026a47ceedc301311e969c872f8d41';
         $this->name       = 'mastercard';
         $this->tab        = 'payments_gateways';
-        $this->version    = '1.4.5';
+        $this->version    = '1.4.6';
         if (!defined('MPGS_VERSION')) {
             define('MPGS_VERSION', $this->version);
         }
         $this->author                 = 'MasterCard';
         $this->need_instance          = 1;
         $this->controllers            = array('payment', 'validation');
-        $this->ps_versions_compliancy = array('min' => '1.7.1.0', 'max' => _PS_VERSION_);
+        $this->ps_versions_compliancy = array('min' => '8.0.0', 'max' => '9.99.99');
         $this->currencies             = true;
         $this->currencies_mode        = 'checkbox';
 
@@ -106,9 +106,9 @@ class Mastercard extends PaymentModule
      *
      * @return string
      */
-    public function iso2ToIso3($iso2country)
+    public function iso2ToIso3(string $iso2country): ?string
     {
-        return MPGS_ISO3_COUNTRIES[$iso2country];
+        return MPGS_ISO3_COUNTRIES[$iso2country] ?? null;
     }
 
     /**
@@ -296,10 +296,14 @@ class Mastercard extends PaymentModule
         return true;
     }
 
-    /*
-    *
-    * Create order state if not exit
-    */
+    /**
+     * Create order state if not exists in PrestaShop
+     *
+     * This method checks for and creates the required MPGS order states
+     * if they don't already exist in the system.
+     *
+     * @return void
+     */
     private function createOrderStateIfNotExists(string $configKey, string $defaultName, array $options)
     {
         $stateId       = Configuration::get($configKey);
@@ -356,11 +360,12 @@ class Mastercard extends PaymentModule
         }
     }
 
-    /*
-    *
-    *return the new github version and link
-    */
-    private function getLatestGitHubVersion() {
+    /**
+     * Check for the latest release version on GitHub
+     *
+     * @return array|null Array with 'version' and 'download_url' keys, or null if check fails
+     */
+    private function getLatestGitHubVersion(): ?array {
         $owner = 'fingent-corp';
         $repo  = 'gateway-prestashop-mastercard-module';
         $url   = "https://api.github.com/repos/{$owner}/{$repo}/releases/latest";
@@ -384,7 +389,6 @@ class Mastercard extends PaymentModule
             return null;
         }
     }
-
 
     /**
      * @return string
@@ -415,6 +419,12 @@ class Mastercard extends PaymentModule
             'module_dir'             => $this->_path,
             'mpgs_gateway_validated' => Configuration::get('mpgs_gateway_validated'),
         ]);
+
+        $fileData = $this->getUploadedLogo();
+
+        if (!empty($fileData['tmp_name']) && is_uploaded_file($fileData['tmp_name'])) {
+            $this->handleLogoUpload();
+        }
 
         // Fetch latest release information
         $latestRelease = $this->checkForUpdates();
@@ -484,7 +494,7 @@ class Mastercard extends PaymentModule
     *
     * @return value
     */
-    private function isLiveMode()
+    private function isLiveMode(): bool
     {
         return Tools::getValue('mpgs_mode') === "1";
     }
@@ -523,7 +533,7 @@ class Mastercard extends PaymentModule
         ];
 
         foreach ($validations as $key => $rules) {
-            $value = Tools::getValue($key);
+            $value = Tools::getValue($key) ?? '';
             $label = ucwords(str_replace('_', ' ', $key));
 
             if (!empty($rules['max']) && strlen($value) > $rules['max']) {
@@ -539,6 +549,15 @@ class Mastercard extends PaymentModule
             }
         }
     }
+    
+    /**
+    * Retrieve the uploaded logo file data from the form submission.
+    * @return array|null Array containing file data or null if no file was uploaded
+    */
+    private function getUploadedLogo(): ?array
+    {
+        return Tools::fileAttachment('mpgs_mi_logo');
+    }
 
     /**
     * Handle the upload of the merchant logo image.
@@ -549,41 +568,45 @@ class Mastercard extends PaymentModule
     */
     private function handleLogoUpload()
     {
-        $fileData     = Tools::fileAttachment('mpgs_mi_logo');
-        $file         = $fileData['name'] ?? null;
-        $tmpName      = $fileData['tmp_name'] ?? null;
-        $existingLogo = Configuration::get('mpgs_mi_logo');
+        $fileData = $this->getUploadedLogo();
 
-        if (!empty($file)) {
-            // Get file extension safely
-            $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+        if (empty($fileData['tmp_name']) || !file_exists($fileData['tmp_name'])) {
+            return;
+        }
 
-            // Allowed extensions
-            $allowedExtensions = ['jpg', 'jpeg', 'png', 'svg'];
+        $tmpName            = $fileData['tmp_name'];
+        $fileNameOriginal   = $fileData['name'];
+        $extension          = strtolower(pathinfo($fileNameOriginal, PATHINFO_EXTENSION));
+        $allowedExtensions  = ['jpg', 'jpeg', 'png', 'svg'];
 
-            if (in_array($extension, $allowedExtensions)) {
-                $uploadDir = _PS_MODULE_DIR_ . 'mastercard/views/upload/';
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0755, true);
-                }
+        if (!in_array($extension, $allowedExtensions)) {
+            $this->postErrors[] = $this->l('Invalid file type.');
+            return;
+        }
 
-                $fileName = uniqid() . '_' . basename($file);
-                $destination = $uploadDir . $fileName;
+        $cleanName = preg_replace('/[^\p{L}\p{N}]/u', '-', pathinfo($fileNameOriginal, PATHINFO_FILENAME));
+        $cleanName = preg_replace('/-+/', '-', $cleanName);
+        $cleanName = trim($cleanName, '-');
+        
+        $fileName = uniqid() . '_' . $cleanName . '.' . $extension;
 
-                // Move uploaded file (no direct $_FILES access)
-                if ($tmpName && move_uploaded_file($tmpName, $destination)) {
-                    $imageUrl = _PS_BASE_URL_SSL_ . __PS_BASE_URI__ . 'modules/mastercard/views/upload/' . $fileName;
-                    Configuration::updateValue('mpgs_mi_logo', $imageUrl);
-                } else {
-                    $this->postErrors[] = $this->l('File upload failed.');
-                }
-            } else {
-                $this->postErrors[] = $this->l('Invalid file type. Only JPG, PNG, and SVG extensions allowed.');
-            }
-        } elseif (!empty($existingLogo)) {
-            Configuration::updateValue('mpgs_mi_logo', $existingLogo);
+        $uploadDir = _PS_MODULE_DIR_ . 'mastercard/views/upload/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $destination = $uploadDir . $fileName;
+
+        if (copy($tmpName, $destination)) {
+            $imageUrl = _PS_BASE_URL_SSL_ . __PS_BASE_URI__ . 'modules/mastercard/views/upload/' . $fileName;
+            
+            // Ensure the URL is properly encoded just in case
+            $encodedUrl = str_replace(' ', '%20', $imageUrl);
+
+            Configuration::updateValue('mpgs_mi_logo', $encodedUrl);
+            $this->postSuccess[] = $this->l('File uploaded successfully.');
         } else {
-            Configuration::updateValue('mpgs_mi_logo', '');
+            $this->postErrors[] = $this->l('File upload failed.');
         }
     }
 
@@ -606,7 +629,7 @@ class Mastercard extends PaymentModule
                                 .'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
         $helper->token                    = Tools::getAdminTokenLite('AdminModules');
         $helper->tpl_vars                 = array(
-            'fields_value' => $this->getAdminFormValues(), /* Add values for your inputs */
+            'fields_value' => $this->getAdminFormValues(),
             'languages'    => $this->context->controller->getLanguages(),
             'id_language'  => $this->context->language->id,
         );
@@ -622,7 +645,7 @@ class Mastercard extends PaymentModule
     /**
      * @return array
      */
-    protected function getAdminFormValues()
+    protected function getAdminFormValues(): array
     {
         $hcTitle   = array();
         $languages = Language::getLanguages(false);
@@ -653,7 +676,6 @@ class Mastercard extends PaymentModule
             'mpgs_webhook_url'       => Tools::getValue('mpgs_webhook_url', Configuration::get('mpgs_webhook_url')),
             'mpgs_logging_level'     => Tools::getValue('mpgs_logging_level',
                 Configuration::get('mpgs_logging_level') ?: \Monolog\Logger::ERROR),
-
             'mpgs_merchant_id'       => Tools::getValue('mpgs_merchant_id', Configuration::get('mpgs_merchant_id')),
             'mpgs_api_password'      => Tools::getValue('mpgs_api_password', Configuration::get('mpgs_api_password')),
             'mpgs_webhook_secret'    => Tools::getValue('mpgs_webhook_secret',
@@ -666,7 +688,6 @@ class Mastercard extends PaymentModule
             'mpgs_mi_country'           => Tools::getValue('mpgs_mi_country', Configuration::get('mpgs_mi_country')),
             'mpgs_mi_email'             => Tools::getValue('mpgs_mi_email', Configuration::get('mpgs_mi_email')),
             'mpgs_mi_phone'             => Tools::getValue('mpgs_mi_phone', Configuration::get('mpgs_mi_phone')),
-
             'test_mpgs_merchant_id'    => Tools::getValue('test_mpgs_merchant_id',
                 Configuration::get('test_mpgs_merchant_id')),
             'test_mpgs_api_password'   => Tools::getValue('test_mpgs_api_password',
@@ -1166,7 +1187,7 @@ class Mastercard extends PaymentModule
      */
     public function hookDisplayAdminOrderSideBottom($params)
     {
-        return $this->renderActionsSections($params, 'views/templates/hook/order_actions_v1770.tpl');
+        return $this->renderActionsSections($params, 'views/templates/hook/order_actions_bottom.tpl');
     }
 
     /**
@@ -1224,7 +1245,7 @@ class Mastercard extends PaymentModule
      * @throws PrestaShopDatabaseException
      * @throws PrestaShopException
      */
-    private function renderActionsSections($params, $view)
+    private function renderActionsSections(array $params, string $view): string
     {
         if (!$this->active) {
             return '';
@@ -1434,7 +1455,7 @@ class Mastercard extends PaymentModule
      *
      * @return string
      */
-    public function getOrderRef($order)
+    public function getOrderRef(Order $order): string
     {
         $cartId = (string)$order->id_cart;
         $prefix = Configuration::get('mpgs_order_prefix') ?: '';

@@ -15,7 +15,7 @@
  * limitations under the License.
  *
  * @package  Mastercard
- * @version  GIT: @1.4.5@
+ * @version  GIT: @1.4.6@
  * @link     https://github.com/fingent-corp/gateway-prestashop-mastercard-module
  */
 
@@ -42,6 +42,11 @@ use Http\Client\Exception;
 use Http\Client\Common\Exception\ClientErrorException;
 use Http\Client\Common\Exception\ServerErrorException;
 use Http\Promise\promise;
+use Fingent\Mastercard\Handlers\MasterCardPaymentException;
+
+if (!defined('_PS_VERSION_')) {
+    throw new MasterCardPaymentException('Direct access not allowed.');
+}
 
 class ApiErrorPlugin implements Plugin
 {

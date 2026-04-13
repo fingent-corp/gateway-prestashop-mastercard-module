@@ -15,7 +15,7 @@
  * limitations under the License.
  *
  * @package  Mastercard
- * @version  GIT: @1.4.5@
+ * @version  GIT: @1.4.6@
  * @link     https://github.com/fingent-corp/gateway-prestashop-mastercard-module
  */
 
@@ -25,6 +25,11 @@ use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Configuration;
 use OrderHistory;
+use Fingent\Mastercard\Handlers\MasterCardPaymentException;
+
+if (!defined('_PS_VERSION_')) {
+    throw new MasterCardPaymentException('Direct access not allowed.');
+}
 
 class OrderStatusResponseHandler extends ResponseHandler
 {
@@ -38,16 +43,16 @@ class OrderStatusResponseHandler extends ResponseHandler
     public function handle($order, $response)
     {
 
-        if ($order->getCurrentState() == \Configuration::get('MPGS_OS_FRAUD')) {
+        if ($order->getCurrentState() == Configuration::get('MPGS_OS_FRAUD')) {
             return;
         }
 
-        if ($order->getCurrentState() == \Configuration::get('MPGS_OS_REVIEW_REQUIRED')) {
+        if ($order->getCurrentState() == Configuration::get('MPGS_OS_REVIEW_REQUIRED')) {
             return;
         }
 
         if ($this->hasExceptions()) {
-            $history = new \OrderHistory();
+            $history = new OrderHistory();
             $history->id_order = (int)$order->id;
             $history->changeIdOrderState(Configuration::get('PS_OS_ERROR'), $order, true);
             $history->addWithemail(true, array());
@@ -58,27 +63,27 @@ class OrderStatusResponseHandler extends ResponseHandler
         $newStatus = null;
 
         if ($response['status'] == "AUTHORIZED") {
-            $newStatus = \Configuration::get('MPGS_OS_AUTHORIZED');
+            $newStatus = Configuration::get('MPGS_OS_AUTHORIZED');
         }
 
         if ($response['status'] == "CAPTURED") {
-            $newStatus = \Configuration::get('PS_OS_PAYMENT');
+            $newStatus = Configuration::get('PS_OS_PAYMENT');
         }
 
         if ($response['status'] == 'VOID_AUTHORIZATION' || $response['status'] == 'CANCELLED') {
-            $newStatus = \Configuration::get('PS_OS_CANCELED');
+            $newStatus = Configuration::get('PS_OS_CANCELED');
         }
 
         if ($response['status'] == 'REFUNDED') {
-            $newStatus = \Configuration::get('PS_OS_REFUND');
+            $newStatus = Configuration::get('PS_OS_REFUND');
         }
 
         if ($response['status'] == 'PARTIALLY_REFUNDED') {
-                $newStatus = \Configuration::get('MPGS_OS_PARTIALLY_REFUNDED');
+                $newStatus = Configuration::get('MPGS_OS_PARTIALLY_REFUNDED');
         }
 
         if (!$newStatus) {
-            $newStatus = \Configuration::get('PS_OS_ERROR');
+            $newStatus = Configuration::get('PS_OS_ERROR');
             $this->processor->logger->error(
                 'Unexpected response status "'.$response['status'].'"',
                 array(
@@ -87,7 +92,7 @@ class OrderStatusResponseHandler extends ResponseHandler
             );
         }
 
-        $history = new \OrderHistory();
+        $history = new OrderHistory();
         $history->id_order = (int)$order->id;
         $history->changeIdOrderState($newStatus, $order, true);
         $history->addWithemail(true, array());

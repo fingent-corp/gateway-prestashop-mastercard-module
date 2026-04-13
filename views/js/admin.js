@@ -4,9 +4,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // Function to toggle the visibility of the fieldset
     function toggleFieldsetVisibility() {
         if (paymentMethodSelect.value === 'REDIRECT') {
-            fieldset.style.display = 'block';  // Show the fieldset
+            fieldset.style.display = 'block';
         } else {
-            fieldset.style.display = 'none';   // Hide the fieldset
+            fieldset.style.display = 'none';
         }
     }
 

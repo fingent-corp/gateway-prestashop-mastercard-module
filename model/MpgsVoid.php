@@ -15,11 +15,17 @@
  * limitations under the License.
  *
  * @package  Mastercard
- * @version  GIT: @1.4.5@
+ * @version  GIT: @1.4.6@
  * @link     https://github.com/fingent-corp/gateway-prestashop-mastercard-module
  */
 
 namespace Fingent\Mastercard\Model;
+
+use Fingent\Mastercard\Handlers\MasterCardPaymentException;
+
+if (!defined('_PS_VERSION_')) {
+    throw new MasterCardPaymentException('Direct access not allowed.');
+}
 
 class MpgsVoid extends \ObjectModel
 {
@@ -52,7 +58,7 @@ class MpgsVoid extends \ObjectModel
         $sql = new \DbQuery();
         $sql->from(static::$definition['table']);
         $sql->select('COUNT(*)');
-        $sql->where('order_id = ' . pSQL($orderId));
+        $sql->where('order_id = ' . (int)$orderId);
 
         $res = \Db::getInstance()->getValue($sql);
 
@@ -68,7 +74,7 @@ class MpgsVoid extends \ObjectModel
         $sql = new \DbQuery();
         $sql->from(static::$definition['table']);
         $sql->select('*');
-        $sql->where('order_id = ' . pSQL($orderId));
+        $sql->where('order_id = ' . (int)$orderId);
 
         $res = \Db::getInstance()->query($sql);
 

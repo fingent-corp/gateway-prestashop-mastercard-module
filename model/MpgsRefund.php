@@ -15,10 +15,16 @@
  * limitations under the License.
  *
  * @package  Mastercard
- * @version  GIT: @1.4.5@
+ * @version  GIT: @1.4.6@
  * @link     https://github.com/fingent-corp/gateway-prestashop-mastercard-module
  */
 namespace Fingent\Mastercard\Model;
+
+use Fingent\Mastercard\Handlers\MasterCardPaymentException;
+
+if (!defined('_PS_VERSION_')) {
+    throw new MasterCardPaymentException('Direct access not allowed.');
+}
 
 class MpgsRefund extends \ObjectModel
 {
@@ -55,7 +61,7 @@ class MpgsRefund extends \ObjectModel
         $sql = new \DbQuery();
         $sql->from(static::$definition['table']);
         $sql->select('COUNT(*)');
-        $sql->where(self::ORDERID . pSQL($orderId));
+        $sql->where(self::ORDERID . (int)$orderId);
 
         $res = \Db::getInstance()->getValue($sql);
 
@@ -71,7 +77,7 @@ class MpgsRefund extends \ObjectModel
         $sql = new \DbQuery();
         $sql->from(static::$definition['table']);
         $sql->select('COUNT(*)');
-        $sql->where(self::ORDERID . pSQL($orderId) . ' AND order_slip_id=0');
+        $sql->where(self::ORDERID . (int)$orderId . ' AND order_slip_id = 0');
 
         $res = \Db::getInstance()->getValue($sql);
 
@@ -87,7 +93,7 @@ class MpgsRefund extends \ObjectModel
         $sql = new \DbQuery();
         $sql->from(static::$definition['table']);
         $sql->select('*');
-        $sql->where(self::ORDERID . pSQL($orderId));
+        $sql->where(self::ORDERID . (int)$orderId);
 
         $res = \Db::getInstance()->query($sql);
 
