@@ -61,7 +61,7 @@ class MpgsRefund extends \ObjectModel
         $sql = new \DbQuery();
         $sql->from(static::$definition['table']);
         $sql->select('COUNT(*)');
-        $sql->where(self::ORDERID . pSQL($orderId));
+        $sql->where(self::ORDERID . (int)$orderId);
 
         $res = \Db::getInstance()->getValue($sql);
 
@@ -77,7 +77,7 @@ class MpgsRefund extends \ObjectModel
         $sql = new \DbQuery();
         $sql->from(static::$definition['table']);
         $sql->select('COUNT(*)');
-        $sql->where(self::ORDERID . pSQL($orderId) . ' AND order_slip_id=0');
+        $sql->where(self::ORDERID . (int)$orderId . ' AND order_slip_id = 0');
 
         $res = \Db::getInstance()->getValue($sql);
 
@@ -93,7 +93,7 @@ class MpgsRefund extends \ObjectModel
         $sql = new \DbQuery();
         $sql->from(static::$definition['table']);
         $sql->select('*');
-        $sql->where(self::ORDERID . pSQL($orderId));
+        $sql->where(self::ORDERID . (int)$orderId);
 
         $res = \Db::getInstance()->query($sql);
 

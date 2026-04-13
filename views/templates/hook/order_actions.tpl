@@ -4,7 +4,7 @@
       {l s='MasterCard Payment Actions (Online)' mod='mastercard'}
   </div>
   <div>
-    <h4>Gateway Order ID: {$mpgs_order_ref}</h4>
+    <h4>Gateway Order ID: {$mpgs_order_ref|escape:'html':'UTF-8'}</h4>
       {if $can_review}
         <p>{l s='This order has been marked to require payment review. Please review the order at the Payment Gateway Administration.' mod='mastercard'}</p>
       {/if}
@@ -95,7 +95,7 @@
         {foreach $refunds AS $refund}
           <tr>
             <td>
-                {$refund->refund_id}
+                {$refund->refund_id|intval}
             </td>
             <td>
                 {if $refund->order_slip_id}
@@ -111,7 +111,7 @@
                 {displayPrice price=$refund->total currency=$order->id_currency}
             </td>
             <td>
-                {$refund->transaction_id}
+                {$refund->transaction_id|escape:'html':'UTF-8'}
             </td>
           </tr>
         {/foreach}
@@ -146,13 +146,13 @@
         {foreach $voids AS $void}
           <tr>
             <td>
-                {$void->void_id}
+                {$void->void_id|intval}
             </td>
             <td>
                 {displayPrice price=$void->total currency=$order->id_currency}
             </td>
             <td>
-                {$void->transaction_id}
+                {$void->transaction_id|escape:'html':'UTF-8'}
             </td>
           </tr>
         {/foreach}

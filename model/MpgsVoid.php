@@ -58,7 +58,7 @@ class MpgsVoid extends \ObjectModel
         $sql = new \DbQuery();
         $sql->from(static::$definition['table']);
         $sql->select('COUNT(*)');
-        $sql->where('order_id = ' . pSQL($orderId));
+        $sql->where('order_id = ' . (int)$orderId);
 
         $res = \Db::getInstance()->getValue($sql);
 
@@ -74,7 +74,7 @@ class MpgsVoid extends \ObjectModel
         $sql = new \DbQuery();
         $sql->from(static::$definition['table']);
         $sql->select('*');
-        $sql->where('order_id = ' . pSQL($orderId));
+        $sql->where('order_id = ' . (int)$orderId);
 
         $res = \Db::getInstance()->query($sql);
 
