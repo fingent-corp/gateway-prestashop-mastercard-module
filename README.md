@@ -39,6 +39,11 @@ With PayPal, customers can make payments quickly and effortlessly through the ho
    - **KNET (Supported in Hosted Checkout Only)**<br/>
 With KNET, customers can make payments quickly and effortlessly through the hosted checkout page. To use this option, ensure that your MID is set up for KNET transactions. Once enabled, this feature provides a seamless and hassle-free payment experience, allowing customers to complete their purchases with just a few simple taps.
 
+- **IRIS Pay (Supported in Hosted Checkout Only)**<br/>
+Give your customers the flexibility of IRIS Pay for quick and secure payments right from the hosted checkout page. To get started, ensure your MID is enabled for IRIS Pay processing. Once live, this integration ensures a streamlined, worry-free checkout experience, making it easier than ever for shoppers to authorize payments with minimal effort.
+
+Note: IRIS Pay is only available via full-page redirect when using the Purchase Method within Hosted Checkout.
+
 **2. Checkout and Payment Integration -** This feature focuses on the method of collecting payment details from customers:
 
    - **Hosted Checkout**<br/>
