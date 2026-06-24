@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file.
 ## [1.4.6] - 2026-03-17
 ### Added
 - Prestashop 9 Support.
+- IRIS Pay Support
 - Minor Bug fixes.
 
 ## [1.4.5] - 2025-11-12
